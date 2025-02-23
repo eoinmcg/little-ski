@@ -22,8 +22,16 @@ The tutorial will be available at http://localhost:5501/tutorial.html
 
 The game can be played at https://localhost:5501
 
-___
+## Preview
 
 [Tutorial](https://eoinmcgrath.com/little-ski/tutorial.html)
 
 [Play](https://eoinmcgrath.com/little-ski)
+
+## Tools & Assets used
+- [LittleJS](https://github.com/KilledByAPixel/LittleJS)
+- [Kenney.nl](https://kenney.nl) [Tiny Ski](https://kenney.nl/assets/tiny-ski)
+- [Pico-8 Tunes vol 1](https://www.lexaloffle.com/bbs/?tid=29008) by @gruber_music *
+- [Pico-8 Music](https://github.com/codyebberson/pico8-music) by Cody Ebberson *
+
+* used in final game, not tutorial

@@ -1,9 +1,8 @@
 # Little Ski
 
-A simple ski game, written in LittleJS with an accompanying tutorial
+A simple ski game, written in [LittleJS](https://github.com/KilledByAPixel/LittleJS) with an accompanying tutorial
 
 ![Screenshot](https://raw.githubusercontent.com/eoinmcg/little-ski/refs/heads/main/public/screenshot.png)
-![LittleJS Logo](https://raw.githubusercontent.com/KilledByAPixel/LittleJS/refs/heads/main/examples/logo.png)
 
 ## Installing
 

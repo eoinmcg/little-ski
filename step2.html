@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LittleJS Ski - Step 2</title>
+<script src="https://cdn.jsdelivr.net/npm/littlejsengine@1.11.2/dist/littlejs.js"> </script>
+</head>
+<body>
+
+<script>
+'use strict';
+
+// create a simple a object that defines
+// some basic settings for our game
+const G = {
+  width: 320, height: 480,
+  tileSize: 16,
+  tiles: ['public/ski_tiles.png'],
+}
+
+// check for touch controls
+touchInputInit();
+
+// called once, when the game is initialized
+// set up screen size and camera.
+function gameInit() {
+
+  // game dimensions stored inside a vector
+  const gameSize = vec2(G.width, G.height);
+  setCanvasFixedSize(gameSize);
+  setCanvasMaxSize(gameSize);
+
+  // convert game dimensions to tile size
+  G.size = vec2(G.width / G.tileSize, G.height / G.tileSize);
+
+  // center of the screen
+  G.center = vec2(G.size.x/2,G.size.y/2)
+
+  // position camera in middle of screen
+  setCameraPos(G.center); 
+  // scale 1:1 with our tilesize (16x16)
+  cameraScale = G.tileSize;
+
+  // create our player
+  G.player = new Player();
+
+}
+
+
+// the following four functions will be called
+// each game loop
+function gameUpdate() {
+  // check for stuff like game over condition etc.
+}
+
+function gameRender() {
+  // clear the screen with a white rectangle
+  drawRect(G.center, G.size, new Color().setHex('#ffffff'));
+}
+
+// called after gameUpdate
+function gameUpdatePost() { }
+// called after gameRender. Useful for adding UI
+function gameRenderPost() { }
+
+// fire up LittleJS with all the necessary functions and tiles(s)
+engineInit(
+  gameInit,
+  gameUpdate, gameUpdatePost,
+  gameRender, gameRenderPost,
+  G.tiles
+);
+
+
+class Player extends EngineObject {
+  constructor() {
+    let size = 1.5, frame = 71;
+    super(
+      G.center,
+      vec2(size),
+      tile(frame, G.tileSize)
+    );
+
+    // edge of screen, left
+    this.minX = 1;
+    // edge of screen, right
+    this.maxX = (G.width / G.tileSize) -1;
+
+    // horizontal direction of player
+    this.dir = 0;
+
+  }
+
+  update() {
+    super.update();
+      console.log(mouseWasPressed(0))
+
+    if (mouseWasPressed(0) || keyWasPressed('Space')) {
+      this.velocity.x = (this.velocity.x === 0)
+        ? .1
+        : this.velocity.x * -.25;
+    }
+
+    // // gradually increase x speed
+    if (this.velocity.x !== 0) {
+      this.velocity.x *= 1.05;
+    }
+    // // clamp x speed
+    this.velocity.x = clamp(this.velocity.x, -.35, .35);
+
+    this.angle = -this.velocity.x;
+
+    // change direction if player about to go off screen
+    if (this.pos.x <= this.minX
+        || this.pos.x >= this.maxX) {
+      this.velocity.x *= -1;
+    }
+  }
+}
+</script>
+
+</body>
+</html>
+

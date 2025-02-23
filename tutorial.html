@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html data-theme="light" lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Make a Ski Free style game with LittleJS</title>
+
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism.min.css" integrity="sha512-/mZ1FHPkg6EKcxo0fKXF51ak6Cr2ocgDi5ytaTBjsQZIH/RNs6GF6+oId/vPe3eJB836T36nXwVh/WBl/cWT4w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-atom-dark.min.css" integrity="sha512-GZPS1oCebjx8g/ZkrTTvWirW+4wDkzIsilUQPXcZzuDpDzoH5brM2AojiFjo6ObIWeM68ZDostvdjaS9MNYCTg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/plugins/line-numbers/prism-line-numbers.min.css" integrity="sha512-3/cdM9qaJ5lBlzRKqwhMw+ZcNCVonz66BO6HgJudG/P1azm9wFrru31SsBa4T4Ew1AOH8HfDXSWS6emWwPl42A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/plugins/line-highlight/prism-line-highlight.min.css" integrity="sha512-C8oHCUM4bDBqmi+GXg5vQCOjriNXzean+2n2TzTDQoNJDWpjzkkJv5Nl0ZMEQoCKpXrRHpAFztPmClcPCuRdvw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/prism.min.js" data-manual integrity="sha512-UOoJElONeUNzQbbKQbjldDf9MwOHqxNz49NNJJ1d90yp+X9edsHyJoAs6O4K19CZGaIdjI5ohK+O2y5lBTW6uQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/components/prism-bash.min.js" integrity="sha512-35RBtvuCKWANuRid6RXP2gYm4D5RMieVL/xbp6KiMXlIqgNrI7XRUh9HurE8lKHW4aRpC0TZU3ZfqG8qmQ35zA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/components/prism-javascript.min.js" integrity="sha512-yvw5BDA/GQu8umskpIOBhX2pDLrdOiriaK4kVxtD28QEGLV5rscmCfDjkrx52tIgzLgwzs1FsALV6eYDpGnEkQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/plugins/line-numbers/prism-line-numbers.min.js" integrity="sha512-QTYXYEniHb1m0ZKtSyfpmw40uH9vPfV07vxsv/plIRMEiON4yOp2qoZiv/FTqFIOym4bdQ4+p9RtHaCMC0ApRw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/plugins/line-highlight/prism-line-highlight.min.js" integrity="sha512-MUsHA6aIEavjYGGEssYHDHg89kcl8lzc5fGblgCw0lWX2gYSq6phdSSrtMkekRwz4juQnlbI+7mCMm5BtWvLbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+body { background: #cfe7f7; min-height: 100vh; }
+.container { max-width: 800px; }
+a { text-decoration: none; font-weight: bold; color: hotpink; border-bottom: 1px dotted; }
+a:hover { border-bottom: 1px solid; color: crimson; }
+h1 { color: crimson; font-weight: bold; }
+h1 a { text-decoration: none; border: none; color: var(--pico-primary-background); }
+h1 a:hover { border: none; }
+h2 { font-weight: normal; font-size: 1.5rem; }
+nav { position: fixed; top: 0rem; right: 1rem; z-index: 1; }
+.note { border-left: 5px solid rgba(0,0,0,0.1); background: lightgoldenrodyellow; position: relative; }
+.note::before { position: absolute; top: 5px; left: 5px; content: '🛈 '; font-size: 150%; opacity: 0.5; }
+.note p { padding: 1rem 1rem 1rem 3rem; }
+pre { background: none; opacity: 0; transition: all ease-in 0.25s; position: relative; }
+pre code { font-weight: bold; }
+pre>code { padding: 0; }
+span.filename { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,1); padding: .5rem 1rem; font-weight: bold; }
+button.copy { position: absolute; top: 5px; right: 5px; transition: all .2s linear; background: rgba(255,255,255,0.25); padding: .1rem .2rem; font-size: 80%;
+  border: 1px solid rgba(255,255,255,0.3); }
+}
+button.copy:active,
+button.copy.copied { background: orange; border-color: orange;  }
+pre.show { opacity: 1; }
+img { display: block; margin: 1rem auto; border: 1px solid rgba(0,0,0,0.5); }
+iframe { display: block; margin: 1rem auto; border: 1px solid rgba(0,0,0,0.5); }
+.line-highlight { background: hsla(24,20%,50%,.2)}
+ol.quiet { list-style-type: none; padding-left: 0; }
+b.lines { font-family: monospace; }
+
+ a.btn {  float: right; margin-top: 1rem; }
+ a.btn:hover {  color: #fff; }
+
+section { display: none; padding-bottom: 3rem; }
+section.active { display: block; }
+
+footer { text-align: center; font-size: 90%;}
+footer a { color: #333; font-weight: normal; }
+
+</style>
+</head>
+
+<body class="line-numbers">
+
+<header class="container">
+  <h1>
+    <a href="#">
+    Make a ski game with LittleJS
+    </a>
+  </h1>
+</header>
+
+<nav>
+  <ul>
+    <li>
+      <details class="dropdown">
+        <summary>
+          Content
+        </summary>
+        <ul dir="rtl">
+        </ul>
+      </details>
+    </li>
+  </ul>
+</nav>
+
+    <main class="container">
+      <section class="intro">
+        <h2>Intro</h2>
+    <p>
+      Have you ever wanted to make a game but didn't know where to start?
+      <br/>
+      Well, today is your lucky day. Because, we're going to offload all
+      the heavy lifting to a game engine and concentrate on the fun parts.
+    </p>
+
+    <p>
+      In this tutorial, we will harness the power of <a href="https://killedbyapixel.github.io/LittleJS/docs/">
+       LittleJS</a>; which is super fast, ultra light, easy to grasp and developed by
+       game dev industry veteran <a href="https://frankforce.com/">KilledByAPixel.</a>
+    </p>
+
+    <p>
+    So, let's jump in and get hacking.
+    </p>
+        
+      </section>
+
+      <section>
+      <h2>What we will be making</h2>
+      <p>
+            To keep things simple here are some criteria to prevent feature creep and
+            overscoping
+            
+            <ul>
+            </ul>
+            <li> Casual game to be played on any device from phone to laptop.</li>
+            <li> Input simple as possible, i.e. one button.</li>
+            <li> Ready made assets so we can focus on the game.</li>
+            </p>
+
+          <p>
+            <a href="https://kenney.nl">Kenney.nl</a> provides a wealth of free graphics. This 'Tiny Ski' one caught
+            my eye. We will use this as the basis of a simple sking game where the
+            player whizzes down hill avoiding objects and collecting bonuses.
+          </p>
+            <a href="https://kenney.nl/assets/tiny-ski">
+            <img src="./public/preview.png" alt="screenshot of game" />
+            </a>
+        
+      </section>
+
+
+      <section>
+      <h2>The setup</h2>
+      <p>[All code can be found in this git hub repo.]</p>
+      <div class="note">
+         <p> To follow along you will need to have a basic knowledge of javascript.
+      <br /> <br />
+            Having node and npm installed will also help.
+            If you don't have them, you can follow <a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm">
+            this guide </a>. Oh, and you'll also need <a href="https://github.com/git-guides/install-git">Git</a> installed.</p>
+      </div>
+        <p>Crack open your terminal and clone this repo:</p>
+        <pre>
+        <code class="language-bash">
+        git clone https://github.com/eoinmcg/littlejs-ski little-ski
+        cd ski-game
+        npm install
+        npm run dev
+        </code>
+        </pre>
+
+    <p>
+        We now have a local development environment.
+        Navigate to <a href="http://localhost:5501/step.html">http://localhost:5501/step1.html</a>
+         and you'll see this beauty:
+    </p>
+        <iframe width="320" height="480" src="step1.html"> </iframe>
+        <p>Admittedly, it's not much yet. Let's take a peek under the hood to see what is happening</p>
+
+      </section>
+
+      <section>
+        <h2>Step1. Meet LittleJS</h2>
+        <p>Now that the setup is out of the way it's time to roll up our sleeves
+        and take a dive into the code, in step1.html</p>
+
+        <p>I've liberally commented the code. Take a minute to read through and see how it works.</p>
+        <pre class="line-numbers" xdata-line="8-12,17">
+          <span class="filename">File: step1.html</span>
+          <code class="language-javascript" data-step="1">
+// Step1
+'use strict';
+
+// create a simple a object that defines
+// some basic settings for our game
+const G = {
+  width: 320, height: 480,
+  tileSize: 16,
+  tiles: ['public/ski_tiles.png'],
+}
+
+// check for touch controls
+touchInputInit();
+
+// called once, when the game is initialized
+// set up screen size and camera.
+function gameInit() {
+
+  // game dimensions stored inside a vector
+  const gameSize = vec2(G.width, G.height);
+  setCanvasFixedSize(gameSize);
+  setCanvasMaxSize(gameSize);
+
+  // convert game dimensions to tile size
+  G.size = vec2(G.width / G.tileSize, G.height / G.tileSize);
+
+  // center of the screen
+  G.center = vec2(G.size.x/2,G.size.y/2)
+
+  // position camera in middle of screen
+  setCameraPos(G.center); 
+  // scale 1:1 with our tilesize (16x16)
+  cameraScale = G.tileSize;
+
+}
+
+
+// the following four functions will be called
+// each game loop
+function gameUpdate() {
+  // check for stuff like game over condition etc.
+}
+
+function gameRender() {
+  // clear the screen with a white rectangle
+  drawRect(G.center, G.size, new Color().setHex('#ffffff'));
+  // draw an image to the screen
+  drawTile(
+    G.center, // position (vector)
+    vec2(2),// size
+    tile(71, G.tileSize)) // frame and tileSize
+}
+
+// called after gameUpdate
+function gameUpdatePost() { }
+// called after gameRender. Useful for adding UI
+function gameRenderPost() { }
+
+// fire up LittleJS with all the necessary functions and tiles(s)
+engineInit(
+  gameInit,
+  gameUpdate, gameUpdatePost,
+  gameRender, gameRenderPost,
+  G.tiles
+);
+          </code>
+        </pre>
+
+        <p>
+          To quickly summarize:
+          <ol class="quiet">
+            <li>Lines <b class="lines">[7-11]</b> define a basic object containing our game resolution, path to our sprite sheet and the size of each image in the spritesheet (e.g. tile size)</li>
+            <li><b class="lines">[15]</b> In the <code>gameInit</code> function we setup screen size and position the camera</li>
+            <li><b class="lines">[44]</b> In our <code>gameRender</code> function we clear the screen and draw an image</li>
+            <li><b class="lines">[60-64]</b> LittleJS is fired by calling <code>engineInit</code></li>
+          </ol>
+
+        <p>
+          On line <b class="lines">[51]</b> try changing the frame number from 71 to 69. What do you see?
+          <br />
+          Imagine our spritesheet (public/ski_tiles.png) divided up into 16x16 cells. This first cell is
+          frame 0, starting from top left and then moving right. So, our player frame is 70 and the snowman is 69.
+        </p>
+
+        <div class="note">
+          <p>Note all coordinates are declared as a <a href="https://killedbyapixel.github.io/LittleJS/docs/Vector2.html">vec2</a>
+          object.
+            <br />
+          More details on the <a href="https://gurubase.io/g/littlejs/littlejs-coordinate-system-explained">LittleJS coordinate system</a></p>
+        </div>
+
+      </section>
+
+      <section>
+        <h2>Step 2. Interacting with the player</h2>
+        <p>
+          At the bottom of your code we will add a player class that inherits from the
+          <a href="https://killedbyapixel.github.io/LittleJS/docs/EngineObject.html">EngineObject</a> class. This means LittleJS will take
+          care of updating, rendering, checking for collisions etc.
+        </p>
+
+<pre><code class="language-javascript">
+class Player extends EngineObject {
+    constructor() {
+            super.update(
+              vec2(G.center), // pos
+              vec2(2), // size
+              tile(70, G.tileSize)// frame
+            );
+    }
+}
+</code></pre>
+
+<pre><code class="language-javascript">
+// at the bottom of gameInit
+G.player = new Player();
+</code></pre>
+
+<p>We can also remove the drawTile code from gameRender</p>
+<pre><code class="language-javascript">
+function gameRender() {
+  // clear the screen with a white rectangle
+  drawRect(G.center, G.size, new Color().setHex('#ffffff'));
+}
+
+</code></pre>
+
+<p>Because our player inherits from EngineObject it's update method
+will be called every frame. We can hook into this to move our player:</p>
+
+
+<pre><code class="language-javascript">
+class Player extends EngineObject {
+  constructor() {
+    let size = 1.5, frame = 71;
+    super(
+      G.center,
+      vec2(size),
+      tile(frame, G.tileSize)
+    );
+
+    // edge of screen, left
+    this.minX = 1;
+    // edge of screen, right
+    this.maxX = (G.width / G.tileSize) -1;
+
+    // horizontal direction of player
+    this.dir = 0;
+
+  }
+
+  update() {
+    super.update();
+      console.log(mouseWasPressed(0))
+
+    if (mouseWasPressed(0) || keyWasPressed('Space')) {
+      this.velocity.x = (this.velocity.x === 0)
+        ? .1
+        : this.velocity.x * -.25;
+    }
+
+    // // gradually increase x speed
+    if (this.velocity.x !== 0) {
+      this.velocity.x *= 1.05;
+    }
+    // // clamp x speed
+    this.velocity.x = clamp(this.velocity.x, -.35, .35);
+
+    this.angle = -this.velocity.x;
+
+    // change direction if player about to go off screen
+    if (this.pos.x &lt;= this.minX
+        || this.pos.x &gt;= this.maxX) {
+      this.velocity.x *= -1;
+    }
+  }
+}
+</code></pre>
+
+        <p>Cool! The skiier now changes direction on each click / space press.</p>
+
+          <a href="step2.html">Code for this step</a>
+
+
+      </section>
+
+      <section>
+        <h2>Step 3. Tree you later</h2>
+        <p>Next up, we're going to add some trees
+          for our little hero to avoid. The tree class
+          is going to be very similar to our Player class.
+          <br />
+          We want to add a tree object at the bottom of the screen
+          and move it up the screen, giving the illusion of
+          movement.
+        </p>
+
+<pre><code class="language-javascript">
+class Tree extends EngineObject {
+  constructor(game) {
+    let pos = vec2(
+          rand(1,game.size.x-1),  // random x pos
+          -2);                    // just offscreen
+    let frame = 30;
+    super(pos, vec2(2), tile(frame, game.tileSize));
+
+    this.game = game;
+  }
+
+  update() {
+    super.update();
+    this.pos.y += this.game.speed; // move up the screen
+
+    // remove object when past top of screen
+    if (this.pos.y > this.game.size.y) {
+      super.destroy();
+    }
+
+  }
+}
+
+</code></pre>
+
+        <p>
+        In the gameUpdate function we'll generate
+        new trees at random intervals
+        </p>
+
+<pre><code class="language-javascript">
+function gameUpdate() {
+    // randomally generate tree
+    // (lower value results in more trees)
+    if (Math.random() > .99) {
+      new Tree(G);
+    }
+}
+</code></pre>
+
+        <p>
+          We'll also set the game speed in gameInit
+        </p>
+
+<pre><code class="language-javascript">
+function gameInit() {
+   ...
+  G.speed = 0.1;
+}
+</code></pre>
+
+        <p>
+          You should now see trees whizzing
+          past the player. Unfortunately, you can
+          ski right through them. Let's fix that.
+        </p>
+
+        <p>
+          In the Player class add this line, before the end
+          of the constructor function:
+        </p>
+<pre><code class="language-javascript">
+class Player extends EngineObject {
+  constructor() {
+  ...
+  this.setCollision(true, true, false, false);
+  }
+</code></pre>
+
+        <p>And in the Tree class, again, 
+        inside the constructor function:</p>
+<pre><code class="language-javascript">
+class Tree extends EngineObject {
+  constructor(game) {
+  ...
+  this.setCollision(true, false, false, false);
+  }
+</code></pre>
+
+        <p>Now when playing the game, the player pushes
+        the trees out of the way. What we want is a crash,
+        though!</p>
+
+        <p>Because we added the <a href="https://killedbyapixel.github.io/LittleJS/docs/EngineObject.html#setCollision">setCollision</a> to our
+        player and tree LittleJS checks these objects
+        for collisions for each frame. We can access
+        this by adding a collideWithObject method to our player
+        class</p>
+<pre><code class="language-javascript">
+  collideWithObject(o) {
+    if (this.crashed) return;
+    G.speed = 0;
+    this.velocity.x = 0;
+    this.crashed = true;
+  }
+</code></pre>
+
+        <p>Also, we don't want the player to respond
+        to input or move post crash. At the top of the
+        Player update method we can just return if
+        they have crashed:</p>
+<pre><code class="language-javascript">
+  update() {
+    super.update();
+    if (this.crashed) return;
+    ...
+</code></pre>
+
+        <p>
+        And display a Game Over message
+        </p>
+
+<pre><code class="language-javascript">
+function gameRenderPost() { 
+  if (G.player.crashed && Math.sin(time * 5) > 0) {
+    drawTextOverlay('GAME OVER', 
+      vec2(G.size.x/2, G.size.y / 1.5),  // position
+      2,                                 // size
+      new Color().setHex('#ff0000'),     // red color
+      .5);                               // outline size
+  }
+</code></pre>
+
+        <p>You've probably noticed by now that the
+        collision is pretty unforgiving. This can
+          make for an 'unfair' game experience.
+        </p>
+        <p>
+          Press the Esc when playing to show the debug overlay.
+          You can see now that the tree 'hitboxes' are big.
+          By reducing the size of the hitbox the game will
+          be more forgiving.
+        </p>
+        <p>
+          We can achieve this by changing the tree size from 
+          2 to something like .5
+        </p>
+<pre><code class="language-javascript">
+class Tree extends EngineObject {
+  constructor(game) {
+    let pos = vec2(rand(1,game.size.x-1), -2);
+    let frame = 30;
+    super(pos,
+          vec2(.5), // size of tree
+          tile(frame, game.tileSize));
+</code></pre>
+
+        <p>Ok, but now the trees look tiny!</p>
+        <p>Let's override the Tree render method
+        and simply draw a bigger tree:</p>
+
+<pre><code class="language-javascript">
+  render() {
+    drawTile( this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize)) 
+  }
+</code></pre>
+
+        <p>
+          <a href="step3.html">Code for this step</a>
+        </p>
+
+      </section>
+
+
+      <section>
+        <h2>Step 4. Bring the bling</h2>
+        <p>So far, we have a functional game but it looks a bit boring.
+        <br />
+          Let's get to work on fixing that</p>
+
+        <p>
+
+          We can add a two frame animation by repeatedly swapping
+          the frame.<br />
+          This is achieved by using the power of <a href="https://steemit.com/gamedev/@superjustin5000/the-incredibly-useful-sine-waves-part-1-using-the-sin-function-trigonometry-game-dev-primer">sine waves.</a>
+        </p>
+<pre><code class="language-javascript">
+  update() {
+    super.update();
+    // some basic animation
+    this.currentFrame = (Math.sin(time * 7) > 0)
+      ? this.frame : this.frame + 1;
+</code></pre>
+        <p>
+          Now, add a render method to the Player class
+        </p>
+<pre><code class="language-javascript">
+    drawTile(this.pos, this.size,
+      tile(this.currentFrame, G.tileSize),
+      undefined, this.angle);
+  }
+</code></pre>
+
+        <p>
+          I don't know about you, but that white screen looks kinda
+          bland. Let's add a basic palette to our Game object:
+        </p>
+<pre><code class="language-javascript">
+  const G = {
+  ...
+  cols: {
+    white: new Color().setHex('#ffffff'),
+    red: new Color().setHex('#ff0000'),
+    snow: new Color().setHex('#cfe7f7'),
+  },
+</code></pre>
+
+        <p>
+          And adjust the background color to our new 'snow' color:
+        </p>
+
+<pre><code class="language-javascript">
+function gameRender() {
+  // clear the screen with a white rectangle
+  drawRect(G.center, G.size, G.cols.snow);
+}
+</code></pre>
+
+        <p>
+          Time for some particles. Particle effects
+          are super easy to implement in LittleJS and there
+          is a <a href="https://killedbyapixel.github.io/LittleJS/examples/particles/">handy tool</a> for designing them.
+        </p>
+
+        <p>
+          I come up with this effect for when the player crashes.<br />
+          Just add the standalone function add the very bottom of your code.
+        </p>
+<pre><code class="language-javascript">
+const particlesCrash = (pos, game) => {
+  let col = new Color();
+  new ParticleEmitter(
+    pos, 0,            // pos, angle
+    0, .2, 15, 1, // emitSize, emitTime, emitRate, emiteCone
+    tile(86,16),                      // tileInfo
+    game.cols.white, game.cols.snow,           // colorStartA, colorStartB
+    game.cols.white.scale(0,0), game.cols.snow.scale(0,0), // colorEndA, colorEndB
+    1, 5, 8, 0, 0.01,  // time, sizeStart, sizeEnd, speed, angleSpeed
+    1, 1, 0, 1,   // damping, angleDamping, gravityScale, cone
+    .1, 0.1, 0, 1        // fadeRate, randomness, collide, additive
+  );
+}
+</code></pre>
+
+        <p>We'll invoke this in our collideWithObject method
+          and change the animation frame:
+        </p>
+
+<pre><code class="language-javascript">
+  // add to the Player class
+  collideWithObject(o) {
+    if (this.crashed) return;
+    particlesCrash(this.pos, G);
+    this.frame = 94;
+</code></pre>
+
+        <p>
+          Defintely an improvement. Let's add another effect for when the player
+          changes direction. Again at the bottom of your code add this:
+        </p>
+
+<pre><code class="language-javascript">
+const particlesMove = (pos, angle, game, num = 30) => {
+  new ParticleEmitter(
+    vec2(pos.x, pos.y + 1), -angle,            // pos, angle
+    0, .2, num, 1, // emitSize, emitTime, emitRate, emiteCone
+    tile(107,16),                      // tileInfo
+    game.cols.white, game.cols.snow,           // colorStartA, colorStartB
+    game.cols.white.scale(1,0), game.cols.snow.scale(1,0), // colorEndA, colorEndB
+    1, 1, .5, .1, 0,  // time, sizeStart, sizeEnd, speed, angleSpeed
+    1, 1, 0, 1,   // damping, angleDamping, gravityScale, cone
+    .1, 0, 0, 1        // fadeRate, randomness, collide, additive
+  );
+}
+</code></pre>
+
+        <p>
+          And call it in Player update()
+        </p>
+
+
+<pre><code class="language-javascript">
+    if (mouseWasPressed(0) || keyWasPressed('Space')) {
+      particlesMove(this.pos, this.angle, G);
+      this.dir = (this.dir === 0)
+        ? -1 : this.dir *= -1;
+    }
+</code></pre>
+
+        <p>
+          <a href="step2.html">Code for this step</a>
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 5. The sound of swoosh</h2>
+        <p>Time for some SFX. We could add some mp3 or ogg files
+        to achieve this but there is a simpler, lighter approach.</p>
+        <p>Once again, LittleJS has us covered. Check <a href="https://killedbyapixel.github.io/ZzFX/">this tool</a> for
+        generating sound effects.</p>
+        <p>After a bit of experimenting I settled on the following
+          for crash and moving. Add them to the game object:
+        </p>
+
+<pre><code class="language-javascript">
+const G = {
+  ...
+  sfx: {
+    ski: new Sound([.25,.5,40,.5,,.2,,11,,,,,,199]),
+    hit: new Sound([2.1,,156,.01,.01,.3,2,.6,,,,,,1.3,,.2,.14,.45,.01,,150]),
+  },
+</code></pre>
+        <p>
+          Now call it when the player crashes:
+        </p>
+<pre><code class="language-javascript">
+  collideWithObject(o) {
+    if (this.crashed) return;
+    particlesCrash(this.pos, G);
+    G.sfx.hit.play(this.pos);
+</code></pre>
+
+        <p>
+        And when the player changes direction:
+        </p>
+
+<pre><code class="language-javascript">
+    if (mouseWasPressed(0) || keyWasPressed('Space')) {
+      particlesMove(this.pos, this.angle, G);
+      G.sfx.ski.play(this.pos);
+      this.dir = (this.dir === 0)
+        ? -1 : this.dir *= -1;
+    }
+</code></pre>
+
+        <p>
+          <a href="step5.html">Code for this step</a>
+        </p>
+
+      </section>
+
+      <section>
+        <h2>Step 6. Making tracks</h2>
+        <p>Wouldn't it be a bit more realistic if
+        the player left a trail behind them?</p>
+
+        <p>
+          We can implement this by tracking the player's
+          position and angle over time. Then we iterate over
+          these positions and draw the trail (frame 58 in our spritesheet).
+        </p>
+
+        <p>
+          First, add the trail array and color to the Player
+          constructor method.
+        </p>
+
+<pre><code class="language-javascript">
+    this.trail = [];
+    this.trailCol = new Color(1, 1, 1, 0.25);
+</code></pre>
+
+        <p>
+          Now, keep track of movements at the bottom of the Player
+          update method:
+        </p>
+
+<pre><code class="language-javascript">
+    this.trail.push({pos: this.pos.copy(), angle: this.angle});
+    // remove any entries that are now off screen
+    this.trail.forEach((t, i) => {
+      t.pos.y += G.speed;
+      if (t.pos.y > G.size.y) {
+        this.trail.splice(i, 1);
+      }
+    });
+</code></pre>
+
+        <p>
+          Finally, we just render these at start of the Player
+          render method. This ensures the trail will be drawn
+          underneath the player:
+        </p>
+
+<pre><code class="language-javascript">
+  render() {
+    this.trail.forEach((t) => {
+      drawTile(t.pos, vec2(2), tile(58, G.tileSize), this.trailCol, t.angle);
+
+    });
+    ...
+</code></pre>
+
+        <p>
+          Wait! You probably see some artefacts around the
+          trail. This is because our spritesheet has no gaps
+          between each image. We fix this by adding the following,
+          in our gameInit function:
+        </p>
+
+    <pre><code class="language-javascript">
+      tileFixBleedScale = .5;
+    </code></pre>
+
+        <p>
+          <a href="step6.html">Code for this step</a>
+        </p>
+
+      </section>
+
+      <section>
+        <h2>Step 7. Wrapping up</h2>
+        <p>Let's add a simple scoring system,
+        based on distance travelled.</p>
+
+        <p>Add a score variable to our game object, in gameInit()</p>
+    <pre><code class="language-javascript">
+          function gameInit() {
+            ...
+            G.score: 0
+          }
+    </code></pre>
+        <p>Now increment it during game update.</p>
+    <pre><code class="language-javascript">
+          function gameUpdate() {
+            G.score += G.speed / 10;
+            ...
+    </code></pre>
+        <p>We've already seen how littlejs renders text
+          but let's use those numbers in our spritesheet.
+          <br />
+          Here's how it's done:
+        </p>
+    <pre><code class="language-javascript">
+function gameRenderPost() {
+  // left pad the score with 0s, so we have 0001 etc
+  let score = Math.floor(G.score).toString().padStart(4, '0')
+  // position the score at top center
+  let startPos = cameraPos.copy().add(vec2(-3,13))
+  score.split('').forEach((num, index) => {
+    num = parseInt(num, 10); // cast num as an int so we can add it to the frame
+    drawTile(
+      startPos.add(vec2(index * 1.75, 0)),
+      vec2(2.5), // digit size
+      tile(96 + num, G.tileSize), // 96 is the frame for 0
+    );
+  });
+  ...
+    </code></pre>
+
+        <p>Finally, we want players to be able to restart
+        the game after a crash.</p>
+
+        <p>
+          The logic for this can be added in the gameUpdate()
+          function
+        </p>
+
+
+    <pre><code class="language-javascript">
+  if (G.player.crashed
+    && time > G.player.crashed + 2
+    && (mouseWasPressed(0) || keyWasPressed('Space'))) {
+      gameInit();
+    }
+    </code></pre>
+    <p>
+          We'll also add this to gameInit() to remove
+          all existing objects. Add it before you create
+          the player object:
+    </p>
+
+    <pre><code class="language-javascript">
+    function gameInit() {
+      ...
+      engineObjectsDestroy();   // remove all engine objects
+
+      // create our player
+      G.player = new Player();
+      G.speed = 0.1;
+      G.score = 0;
+    }
+    </code></pre>
+
+        <p>
+          Note, that we've added a delay of 2 seconds
+          before the game can be restarted. In order 
+          for this to work we need to update the player collision
+          method to store time of collision, rather than just true:
+        </p>
+
+    <pre><code class="language-javascript">
+    collideWithObject(o) {
+      ...
+    this.crashed = time;
+    </code></pre>
+
+        <p>
+          <a href="step7.html">Code for this step</a>
+        </p>
+
+      </section>
+
+      <section>
+        <h2>Taking it further</h2>
+        <p>Phew! In just over 250 lines of html and javascript
+        we've got a playable game. Not bad!
+        </p>
+        <p>
+          There's obviously still lots of room for
+          improvement. Here are some suggestions:
+          <ul>
+            <li>Add some collectibles to boost score. There are some tasty
+              treats in the spritesheet like donuts and pizza.
+            </li>
+            <li>Add a hiscore system</li>
+            <li>How about music</li>
+            <li>A title screen</li>
+          </ul>
+        </p>
+
+        <p>
+          Check it <a href="final.html">this expanded version</a>
+        </p>
+
+        <p>
+          That's all for now, folks!
+        </p>
+      </section>
+
+    </main>
+
+    <footer>
+      &copy; 2025 <a href="https://eoinmcgrath.com">eoinmcg</a>
+    </footer>
+  
+
+<script>
+
+// load script from public/js
+async function getScript(step) {
+  const url = `${window.location.origin}/step${step}.html`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    return await response.text();
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+addEventListener("DOMContentLoaded", (e) => {
+
+  const sections = [];
+  window.sections = sections;
+  const hash = window.location.hash.replace('#', '');
+  document.querySelectorAll('section')
+    .forEach((section, n) => {
+      let title = section.querySelector('h2').innerText;
+      let slug = title.toLowerCase().replaceAll(' ', '-');
+      section.id = `${n}--${slug}`
+      sections.push({
+        title: title,
+        slug: slug,
+        id: section.id,
+        el: section
+      });
+      
+      if (hash === '' && n === 0 || hash === section.id) {
+      section.classList.add('active');
+      }
+    });
+  
+  const nav = document.querySelector('nav ul:nth-child(2)');
+  sections.forEach((section, n) => {
+    const next = sections?.[n+1] || false;
+    if (next) {
+      const button = document.createElement('a');
+      button.className = 'nav btn';
+      button.role = 'button';
+      button.href = '#' + next.id
+      button.innerHTML = next.title + ' &rarr;';
+      section.el.appendChild(button);
+    }
+      nav.innerHTML += `
+        <li><a href="#${section.id}">${section.title}</a></li>
+      `;
+  });
+
+  window.addEventListener('hashchange', (e) => {
+    let hash = window.location.hash.replace('#', '') || sections[0].id;
+    document.querySelectorAll('section').forEach((section) => {
+          section.classList.remove('active');
+    });
+      document.getElementById(hash).classList.add('active');
+    window.scrollTo(0,0);
+  });
+
+  window.setTimeout(() => {
+    document.querySelectorAll('pre').forEach((pre) => {
+      const code = pre.querySelector('code');
+      if (!code) { return; }
+      pre.classList.add('show');
+      Prism.highlightElement(code);
+
+      let button = document.createElement('button');
+      button.classList = 'copy';
+      button.innerText = 'copy';
+      button.onclick = (e) => {
+        copyToClipboard(e.target);
+      }
+      pre.prepend(button);
+
+    });
+  }, 1000);
+
+}, false);
+
+const copyToClipboard = (button) => {
+  console.log(button);
+  window.button = button;
+  let js = button.parentElement.querySelector('code').innerText;
+  js = js.replaceAll('%lt;', '<');
+  js = js.replaceAll('%gt;', '>');
+  console.log(js);
+    navigator.clipboard.writeText(js)
+      .then((args) => {
+        const text = button.innerText;
+        button.classList.add('copied');
+        button.innerText = 'Copied!';
+        window.setTimeout(() => {
+          button.classList.remove('copied');
+          button.innerText = text;
+        }, 5000);
+      });
+}
+
+</script>
+  </body>
+</html>

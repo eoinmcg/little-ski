@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LittleJS Ski - Step 1</title>
+
+<script src="node_modules/littlejsengine/dist/littlejs.js"> </script>
+
+</head>
+
+<body>
+
+<script>
+
+const searchParams = new URLSearchParams(location.search);
+let step = searchParams.has('step')
+  ? searchParams.get('step') : 1;
+
+
+let url = `${window.location.origin}/public/js/step${step}.js`;
+
+document.title = 'Step ' + step;
+const script = document.createElement('script');
+script.setAttribute('src', url);
+script.addEventListener('error', (e) => {
+  console.log('ERROR: ', e);
+  document.body.innerHTML = `
+    <div style="display: flex; place-items: center;">
+      <div style="width: 300px; ">
+          <p>ERROR!</p>
+      </div>
+    </div>
+  `;
+
+});
+document.head.appendChild(script);
+console.log('loading script ', step, url);
+
+</script>
+
+</body>
+</html>

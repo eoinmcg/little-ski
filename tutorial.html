@@ -134,7 +134,7 @@ footer a { color: #333; font-weight: normal; }
 
       <section>
       <h2>The setup</h2>
-      <p>[All code can be found in this git hub repo.]</p>
+      <p>All code can be found in <a href="https://github.com/eoinmcg/little-ski/">this git hub repo.</a></p>
       <div class="note">
          <p> To follow along you will need to have a basic knowledge of javascript.
       <br /> <br />
@@ -152,9 +152,11 @@ footer a { color: #333; font-weight: normal; }
         </code>
         </pre>
 
+
+        <p>If you don't have git, you can <a href="https://github.com/eoinmcg/little-ski/archive/refs/heads/main.zip">download the zip here.</a></p>
     <p>
         We now have a local development environment.
-        Navigate to <a href="http://localhost:5501/step.html">http://localhost:5501/step1.html</a>
+        Navigate to <a href="step1.html">http://localhost:5501/step1.html</a>
          and you'll see this beauty:
     </p>
         <iframe width="320" height="480" src="step1.html"> </iframe>
@@ -242,8 +244,8 @@ engineInit(
         <p>
           To quickly summarize:
           <ol class="quiet">
-            <li>Lines <b class="lines">[7-11]</b> define a basic object containing our game resolution, path to our sprite sheet and the size of each image in the spritesheet (e.g. tile size)</li>
-            <li><b class="lines">[15]</b> In the <code>gameInit</code> function we setup screen size and position the camera</li>
+            <li>Lines <b class="lines">[6-10]</b> define a basic object containing our game resolution, path to our sprite sheet and the size of each image in the spritesheet (e.g. tile size)</li>
+            <li><b class="lines">[17]</b> In the <code>gameInit</code> function we setup screen size and position the camera</li>
             <li><b class="lines">[44]</b> In our <code>gameRender</code> function we clear the screen and draw an image</li>
             <li><b class="lines">[60-64]</b> LittleJS is fired by calling <code>engineInit</code></li>
           </ol>

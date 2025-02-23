@@ -175,7 +175,7 @@ function gameUpdatePost() { }
 function gameRenderPost() {
   if (G.splash) {
     funkyText('LITTLE', vec2(cameraPos.add(vec2(0,10.5))), 3, false, G);
-    funkyText(' SKI', vec2(cameraPos.add(vec2(-1,7))), 5, false, G);
+    funkyText('SKI', vec2(cameraPos.add(vec2(1.5,7))), 5, false, G);
     if (Math.sin(time*5) > 0) {
       G.font.drawText(`READY?`, cameraPos, .2, true);
     }

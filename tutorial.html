@@ -990,12 +990,9 @@ addEventListener("DOMContentLoaded", (e) => {
 }, false);
 
 const copyToClipboard = (button) => {
-  console.log(button);
-  window.button = button;
   let js = button.parentElement.querySelector('code').innerText;
   js = js.replaceAll('%lt;', '<');
   js = js.replaceAll('%gt;', '>');
-  console.log(js);
     navigator.clipboard.writeText(js)
       .then((args) => {
         const text = button.innerText;

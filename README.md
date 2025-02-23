@@ -19,9 +19,11 @@ Start the local dev server:
 ```
 
 The tutorial will be available at http://localhost:5501/tutorial.html
+
 The game can be played at https://localhost:5501
 
 ___
 
 [Tutorial](https://eoinmcgrath.com/little-ski/tutorial.html)
+
 [Play](https://eoinmcgrath.com/little-ski)

@@ -25,10 +25,22 @@
 }
 body { transition: linear 0.25s; transform: scale(1); }
 .shake { animation: shake 0.5s; }
+button.mute { position: absolute; top: 16px; right: 24px;
+  width: 32px;
+  height: 32px;
+  background-image: url('public/mute.svg');
+  background-color: transparent;
+  background-size: cover;
+  display: none;
+  z-index: 10000;
+  border: none;
+}
+button.mute.muted { background-image: url('public/unmute.svg') }
 </style>
-
 </head>
 <body>
+
+<button class="mute"></button>
 
 <script>
 'use strict';
@@ -51,12 +63,18 @@ const G = {
     snow: new Color().setHex('#cfe7f7'),
   },
   sfx: {
+    play: function(name, pos = false) {
+      if (!G.mute) {
+        G.sfx[name].play(pos);
+      }
+    },
     ski: new Sound([.25,.5,40,.5,,.2,,11,,,,,,199]),
     hit: new Sound([2.1,,156,.01,.01,.3,2,.6,,,,,,1.3,,.2,.14,.45,.01,,150]),
     pickup: new Sound([1.4,,428,,.05,.08,1,1.9,,,442,.04,,,,,.03,.87,.03,,-1399]),
   },
   plays: 0,
   splash: true,
+  mute: false,
 }
 
 // check for touch controls
@@ -70,8 +88,23 @@ G.tunes = new P8(Tunes.i, Tunes.m);
 function splashUpdate() {
   if (mouseWasPressed(0) || keyWasPressed('Space')) {
     G.splash = false;
+    G.muteButton = document.querySelector('button.mute');
+    G.muteButton.style.display = 'block';
+
+    G.muteButton.addEventListener('click', (e) => {
+      toggleMute();
+    });
+
     gameInit();
   }
+}
+
+function toggleMute() {
+  G.mute = !G.mute;
+  G.muteButton.className = G.mute ? 'mute muted' : 'mute';
+  if (G.mute) { G.audio.stop(); }
+  if (!G.mute && !G.player.crashed) { playTune(); }
+  G.muteButton.blur();
 }
 
 function splashRender() {
@@ -129,8 +162,15 @@ function gameInit() {
 
   G.plays += 1;
 
+  playTune();
+
+}
+
+function playTune(tune = false) {
+  if (G.mute) { return; }
   if (G.audio) { G.audio.stop(); }
-  G.audio = G.tunes.music([14, 18, 24, 48].rnd())
+  tune = tune || [14, 18, 24, 48].rnd();
+  G.audio = G.tunes.music(tune)
 }
 
 // the following four functions will be called
@@ -138,6 +178,10 @@ function gameInit() {
 function gameUpdate() {
 
   if (G.splash) { return splashUpdate(); }
+
+  if (keyWasReleased('KeyM')) {
+    toggleMute();
+  }
 
   G.score += G.speed / 10;
 
@@ -238,9 +282,10 @@ class Player extends EngineObject {
 
     if (this.crashed) return;
 
-    if (mouseWasPressed(0) || keyWasPressed('Space')) {
+    const muteButton = mousePos.y > 27 && mousePos.x > 17;
+    if ((mouseWasPressed(0) || keyWasPressed('Space')) && !muteButton) {
       particlesMove(this.pos, this.angle, this.game);
-      this.game.sfx.ski.play(this.pos);
+      this.game.sfx.play('ski', this.pos);
       this.dir = (this.dir === 0)
         ? -1 : this.dir *= -1;
 
@@ -293,7 +338,7 @@ class Player extends EngineObject {
     if (this.crashed) return;
 
     if (o.constructor.name === 'Treat') {
-      this.game.sfx.pickup.play(this.pos);
+      this.game.sfx.play('pickup', this.pos);
       o.destroy();
       particlesCollect(this.pos, this.game);
       this.game.score += 10;
@@ -302,16 +347,13 @@ class Player extends EngineObject {
 
     particlesCrash(this.pos, this.game);
     document.body.classList.add('shake');
-    this.game.sfx.hit.play(this.pos);
+    this.game.sfx.play('hit', this.pos);
     this.game.speed = 0;
     this.velocity.x = 0;
     this.angle = 0;
     this.frame = 94;
     this.crashed = time;
-    if (this.game.audio) { this.game.audio.stop(); }
-    this.game.audio = null;
-
-    this.game.audio = this.game.tunes.music(36);
+    playTune(36);
   }
 
 }
@@ -515,6 +557,8 @@ engineInit(
   console.log('-----------------------')
   console.log('Wanna see how this game was made? Check out the tutorial:')
   console.log('https://eoinmcgrath.com/little-ski/tutorial.html')
+
+  
 
 });
 

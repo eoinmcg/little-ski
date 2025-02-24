@@ -96,9 +96,9 @@ footer a { color: #333; font-weight: normal; }
     </p>
 
     <p>
-      In this tutorial, we will harness the power of <a href="https://killedbyapixel.github.io/LittleJS/docs/">
+      In this tutorial, we will harness the power of <a href="https://killedbyapixel.github.io/LittleJS/docs/" target="blank">
        LittleJS</a>; which is super fast, ultra light, easy to grasp and developed by
-       game dev industry veteran <a href="https://frankforce.com/">KilledByAPixel.</a>
+       game dev industry veteran <a href="https://frankforce.com/" target="blank">KilledByAPixel.</a>
     </p>
 
     <p>
@@ -121,11 +121,11 @@ footer a { color: #333; font-weight: normal; }
             </p>
 
           <p>
-            <a href="https://kenney.nl">Kenney.nl</a> provides a wealth of free graphics. This 'Tiny Ski' one caught
+            <a href="https://kenney.nl" target="blank">Kenney.nl</a> provides a wealth of free graphics. This 'Tiny Ski' one caught
             my eye. We will use this as the basis of a simple sking game where the
             player whizzes down hill avoiding objects and collecting bonuses.
           </p>
-            <a href="https://kenney.nl/assets/tiny-ski">
+            <a href="https://kenney.nl/assets/tiny-ski" target="blank">
             <img src="./public/preview.png" alt="screenshot of game" />
             </a>
         
@@ -134,13 +134,13 @@ footer a { color: #333; font-weight: normal; }
 
       <section>
       <h2>The setup</h2>
-      <p>All code can be found in <a href="https://github.com/eoinmcg/little-ski/">this git hub repo.</a></p>
+      <p>All code can be found in <a href="https://github.com/eoinmcg/little-ski/" target="blank">this git hub repo.</a></p>
       <div class="note">
          <p> To follow along you will need to have a basic knowledge of javascript.
       <br /> <br />
             Having node and npm installed will also help.
             If you don't have them, you can follow <a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm">
-            this guide </a>. Oh, and you'll also need <a href="https://github.com/git-guides/install-git">Git</a> installed.</p>
+            this guide </a>.
       </div>
         <p>Crack open your terminal and clone this repo:</p>
         <pre>
@@ -258,10 +258,10 @@ engineInit(
         </p>
 
         <div class="note">
-          <p>Note all coordinates are declared as a <a href="https://killedbyapixel.github.io/LittleJS/docs/Vector2.html">vec2</a>
+          <p>Note all coordinates are declared as a <a href="https://killedbyapixel.github.io/LittleJS/docs/Vector2.html" target="blank">vec2</a>
           object.
             <br />
-          More details on the <a href="https://gurubase.io/g/littlejs/littlejs-coordinate-system-explained">LittleJS coordinate system</a></p>
+          More details on the <a href="https://gurubase.io/g/littlejs/littlejs-coordinate-system-explained" target="blank">LittleJS coordinate system</a></p>
         </div>
 
       </section>
@@ -270,7 +270,7 @@ engineInit(
         <h2>Step 2. Interacting with the player</h2>
         <p>
           At the bottom of your code we will add a player class that inherits from the
-          <a href="https://killedbyapixel.github.io/LittleJS/docs/EngineObject.html">EngineObject</a> class. This means LittleJS will take
+          <a href="https://killedbyapixel.github.io/LittleJS/docs/EngineObject.html" target="blank">EngineObject</a> class. This means LittleJS will take
           care of updating, rendering, checking for collisions etc.
         </p>
 
@@ -454,7 +454,7 @@ class Tree extends EngineObject {
         the trees out of the way. What we want is a crash,
         though!</p>
 
-        <p>Because we added the <a href="https://killedbyapixel.github.io/LittleJS/docs/EngineObject.html#setCollision">setCollision</a> to our
+        <p>Because we added the <a href="https://killedbyapixel.github.io/LittleJS/docs/EngineObject.html#setCollision" target="blank">setCollision</a> to our
         player and tree LittleJS checks these objects
         for collisions for each frame. We can access
         this by adding a collideWithObject method to our player
@@ -545,7 +545,7 @@ class Tree extends EngineObject {
 
           We can add a two frame animation by repeatedly swapping
           the frame.<br />
-          This is achieved by using the power of <a href="https://steemit.com/gamedev/@superjustin5000/the-incredibly-useful-sine-waves-part-1-using-the-sin-function-trigonometry-game-dev-primer">sine waves.</a>
+          This is achieved by using the power of <a href="https://steemit.com/gamedev/@superjustin5000/the-incredibly-useful-sine-waves-part-1-using-the-sin-function-trigonometry-game-dev-primer" target="blank">sine waves.</a>
         </p>
 <pre><code class="language-javascript">
   update() {
@@ -592,7 +592,7 @@ function gameRender() {
         <p>
           Time for some particles. Particle effects
           are super easy to implement in LittleJS and there
-          is a <a href="https://killedbyapixel.github.io/LittleJS/examples/particles/">handy tool</a> for designing them.
+          is a <a href="https://killedbyapixel.github.io/LittleJS/examples/particles/" target="blank">handy tool</a> for designing them.
         </p>
 
         <p>
@@ -669,7 +669,7 @@ const particlesMove = (pos, angle, game, num = 30) => {
         <h2>Step 5. The sound of swoosh</h2>
         <p>Time for some SFX. We could add some mp3 or ogg files
         to achieve this but there is a simpler, lighter approach.</p>
-        <p>Once again, LittleJS has us covered. Check <a href="https://killedbyapixel.github.io/ZzFX/">this tool</a> for
+        <p>Once again, LittleJS has us covered. Check <a href="https://killedbyapixel.github.io/ZzFX/" target="blank">this tool</a> for
         generating sound effects.</p>
         <p>After a bit of experimenting I settled on the following
           for crash and moving. Add them to the game object:

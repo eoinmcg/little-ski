@@ -558,10 +558,16 @@ engineInit(
   console.log('Wanna see how this game was made? Check out the tutorial:')
   console.log('https://eoinmcgrath.com/little-ski/tutorial.html')
 
+  if (window.location.host === 'eoinmcgrath.com') {
+    let script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://cloud.umami.is/script.js';
+    script.dataset.webId = '6a7a59ee-cea7-4517-8aac-1aa3347fb5da';
+    document.head.appendChild(script);
+  }
   
 
 });
 
 </script>
-</body>
 </html>

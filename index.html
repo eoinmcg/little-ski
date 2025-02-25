@@ -9,6 +9,8 @@
 <!-- Awesome collection of CC tunes: https://www.lexaloffle.com/bbs/?tid=29008-->
 <script src="public/js/tunes.js"></script>
 
+<script defer src="https://cloud.umami.is/script.js" data-website-id="6a7a59ee-cea7-4517-8aac-1aa3347fb5da"></script>
+
 <style>
 @keyframes shake {
   0% { transform: translate(1px, 1px) rotate(0deg); }
@@ -557,15 +559,6 @@ engineInit(
   console.log('-----------------------')
   console.log('Wanna see how this game was made? Check out the tutorial:')
   console.log('https://eoinmcgrath.com/little-ski/tutorial.html')
-
-  if (window.location.host === 'eoinmcgrath.com') {
-    let script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = 'https://cloud.umami.is/script.js';
-    script.dataset.webId = '6a7a59ee-cea7-4517-8aac-1aa3347fb5da';
-    document.head.appendChild(script);
-  }
-  
 
 });
 

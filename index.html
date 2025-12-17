@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>LittleJS Ski - Step 8</title>
+<title>LittleJS Ski</title>
 
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,23 +17,89 @@
 <script defer src="https://cloud.umami.is/script.js" data-website-id="6a7a59ee-cea7-4517-8aac-1aa3347fb5da"></script>
 
 <style>
-button.mute { position: absolute; top: 2rem; right: 3rem;
-  width: 2rem;
-  height: 2rem;
-  background-image: url('public/mute.svg');
-  background-color: transparent;
-  background-size: cover;
-  display: none;
-  z-index: 10000;
-  border: none;
+html ,body { background: #333; }
+#pause-ui {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  transition:
+    display 1s allow-discrete, 
+    overlay 1s allow-discrete, 
+    opacity 1s ease,
+    pointer-events 1s allow-discrete;
+  pointer-events: auto;
 }
-button.mute.muted { background-image: url('public/unmute.svg') }
+/* The "Entrance" state */
+@starting-style {
+  #pause-ui { opacity: 0; pointer-events: none; }
+  #pause-ui #pause-panel { top: -100%; }
+}
+
+#pause-ui[hidden] {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#pause-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+}
+
+#pause-ui #pause-panel {
+  position: relative;
+  top: 40%;
+  transition: top 1s ease;
+}
+#pause-ui[hidden] #pause-panel { top: -100%; }
+
+#pause-panel {
+  inset: 0;
+  font-family: monospace;
+  border: 5px solid #fff;
+  margin: auto;
+  width: min(90vw, 320px);
+  height: fit-content;
+  background: #222;
+  padding: 1em;
+  border-radius: 12px;
+  color: white;
+  z-index: 999999;
+  box-shadow: 5px 5px 0px black;
+}
+#pause-panel { font-size: clamp(18px, 2.5vw, 20px); min-width: 280px; border-radius: 10px; }
+#pause-panel h1 { font-size: 1.6em; margin: 0 0 1rem 0; }
+#pause-panel h2 { font-size: 1.25em; }
+#pause-panel label { 
+  display: block; width: 100%;
+  padding: .5rem 0;
+  border-radius: 5px;
+}
+#pause-panel label.clear-scores { padding-left: 2rem; width: 90%; }
+#pause-panel label:hover { cursor: pointer; background: yellow; color: black; }
+#pause-panel label input { margin-right: 1rem; }
+#pause-panel button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  text-indent: -99999rem;
+  background: #efefef;
+  border: 2px solid black;
+  border-radius: 5px;
+  width: 32px; height: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40px' height='40px' viewbox='0 0 40 40'%3E%3Cpath d='M 10,10 L 30,30 M 30,10 L 10,30' stroke='black' stroke-width='4' stroke-linecap='butt' /%3E%3C/svg%3E");
+  background-size: 100%;
+}
+#pause-panel button:hover {
+  cursor: pointer;
+  background-color: orange;
+  color: #fff;
+}
 </style>
 
 </head>
 <body>
-
-<button class="mute"></button>
 
 <script>
 'use strict';
@@ -42,6 +108,11 @@ button.mute.muted { background-image: url('public/unmute.svg') }
 Array.prototype.rnd = function () {
   return this[Math.floor((Math.random()*this.length))];
 }
+
+let hiScore = 10;
+try {
+  hiScore = window.localStorage.getItem('hiScore') || hiScore;
+} catch (e) {}
 
 const G = {
   width: 20, height: 30,
@@ -53,6 +124,11 @@ const G = {
     pink: new Color().setHex('#ffc0cb'),
     yellow: new Color().setHex('#ffff00'),
     snow: new Color().setHex('#cfe7f7'),
+    lightBlue: new Color().setHex('#29adff'),
+    slate: new Color().setHex('#343635'),
+    skyLight: new Color().setHex('#ffccaa'),
+    skyMed: new Color().setHex('#ff77a8'),
+    skyDark: new Color().setHex('#ff004d'),
   },
   sfx: {
     play: function(name, pos = false) {
@@ -64,14 +140,20 @@ const G = {
     hit: new Sound([2.1,,156,.01,.01,.3,2,.6,,,,,,1.3,,.2,.14,.45,.01,,150]),
     pickup: new Sound([1.4,,428,,.05,.08,1,1.9,,,442,.04,,,,,.03,.87,.03,,-1399]),
   },
+  hiScore: parseInt(hiScore, 10),
   plays: -1,
   splash: true,
+  fullscreen: false,
   mute: false,
   shake: {
     time: 0,
     force: .4,
   },
 }
+
+G.medals = [
+  new Medal(0, 'Hiscore', 'GOT A HISCORE!', '🥇')
+];
 
 if (window.location.hostname !== 'localhost') {
   setShowSplashScreen(true);
@@ -89,15 +171,16 @@ function gameInit() {
   setCanvasPixelated(true);
   setTileDefaultBleed(.5);
 
+
+  medalsInit('little-ski');
+  medalsForEach(medal=> medal.unlocked = false);
+
   let snowflakes = 20;
-  while(snowflakes--) {
-    new Snow(G);
-  }
+  while(snowflakes--) { new Snow(G); }
 
 }
 
 function startGame() {
-  G.muteButton.style.display = 'block';
   inputClear();
   engineObjectsDestroy();   // remove all engine objects
 
@@ -106,6 +189,7 @@ function startGame() {
   G.nextSpawn = 0;
 
   G.plays += 1;
+  G.newHiscore = false;
 
   // background
   let halfH = G.height / 2;
@@ -117,9 +201,12 @@ function startGame() {
       }
     }
   }
-  playTune(false, 10);
+  if (!G.mute) {
+    playTune(false, 10);
+  }
   G.player = new Player(G);
   G.splash = false;
+  G.newHiscore = false;
 
 }
 
@@ -138,26 +225,63 @@ function splashUpdate() {
   }
 }
 
-function toggleMute() {
-  G.mute = !G.mute;
-  G.muteButton.className = G.mute ? 'mute muted' : 'mute';
-  if (G.mute) { G.audio.stop(); }
-  if (!G.mute && !G.player.crashed) { playTune(); }
-  G.muteButton.blur();
+function splashRender() {
+
+  // drawRectGradient(vec2(), vec2(G.width, G.height), G.cols.skyDark, G.cols.skyMed)
+  // drawRectGradient(vec2().add(vec2(0,-4)), vec2(G.width, G.height/4), G.cols.skyLight, CLEAR_BLACK)
+
+  // drawRectGradient(vec2(0, 15), vec2(G.width, 7), new Color(0,0,0,1), new Color(0,0,0, .01));
+  drawRect(vec2(), vec2(G.width, G.height), G.cols.skyDark);
+  drawRect(vec2().add(vec2(0,-4)), vec2(G.width, G.height/2), G.cols.skyMed)
+  drawRect(vec2().add(vec2(0,-7)), vec2(G.width, G.height/4), G.cols.skyLight)
+
+  // bg mtns
+  drawRect(vec2(-8, -10), vec2(6, 6), G.cols.slate, PI/4)
+  drawRect(vec2(8, -10), vec2(7), G.cols.slate, PI/4)
+
+  drawRect(vec2(0, -14), vec2(18, 18).add(vec2(.75)), G.cols.slate, PI/4)
+  drawRect(vec2(0, -14), vec2(18, 18), G.cols.lightBlue, PI/4)
+  drawRect(vec2(0, -4), vec2(4, 4), WHITE, PI/4)
+  drawRect(vec2(2.4, -5), vec2(2, 2), WHITE, PI/4)
+  drawRect(vec2(-2.4, -5), vec2(2, 2), WHITE, PI/4)
+  drawRect(vec2(3.2, -5.5), vec2(1.5), WHITE, PI/4)
+  drawRect(vec2(-3.2, -5.5), vec2(1.5), WHITE, PI/4)
+
+    renderHiScore();
 }
 
-function splashRender() {
-  drawRect(vec2(0), vec2(5), RED);
-  drawTile(cameraPos, vec2(30), tile(0, vec2(256), 1))
+function showPauseUI() {
+  inputClear();
+  setPaused(true);
+  G.pauseUI.hidden = false;
+  if (!G.audio) return;
+  G.audio.playbackRate.value = 0;
+}
+
+function hidePauseUI() {
+  inputClear();
+  G.pauseUI.hidden = true;
+  setPaused(false);
+  if (!G.audio || G.mute) return;
+  G.audio.playbackRate.value = 1;
+}
+
+function toggleMute() {
+  G.mute = !G.mute;
+  G.muteCheckbox.checked = G.mute;
+  if (!G.audio) return;
+  if (G.mute) { G.audio.playbackRate.value = 0; return; }
+  if (!G.mute && !G.player.crashed) {
+    playTune();
+    window.setTimeout(() => {
+      G.audio.playbackRate.value = getPaused() ? 0 : 1;
+    }, 100)
+  }
 }
 
 function gameUpdate() {
 
   if (G.splash) { return splashUpdate(); }
-
-  if (keyWasReleased('KeyM')) {
-    toggleMute();
-  }
 
   G.score += G.speed / 10;
 
@@ -173,14 +297,50 @@ function gameUpdate() {
     if (Math.random() > .95) { new Treat(G); }
   }
 
-  if (G.player && G.player.crashed
+  if (G.score > G.hiScore && !G.newHiscore) {
+    console.log('NEW HI');
+    G.medals[0].unlock();
+    G.newHiscore = true;
+  }
+
+  if (G.score > G.hiScore && G.player.crashed) {
+    G.hiScore = Math.floor(G.score);
+    try {
+      window.localStorage.setItem('hiScore', G.hiScore)
+    } catch (e) {}
+  }
+
+  if (G.player.crashed
     && time > G.player.crashed + 2
     && (mouseWasPressed(0) || keyWasPressed('Space'))) {
     startGame();
   }
+
+  if (G.player && G.player.crashed
+    && time > G.player.crashed + 20) {
+    engineObjectsDestroy();
+    G.audio.stop();
+    G.splash = true;
+  }
+
 }
 
 function gameUpdatePost() {
+
+  if (keyWasReleased('KeyM')) {
+    toggleMute();
+  }
+
+  const mousePause = mouseWasPressed(0) && mousePos.y > 11;
+  if (keyWasReleased('KeyP') || keyWasReleased('KeyEsc') || mousePause) {
+    if (G.pauseUI.hidden) {
+      showPauseUI();
+    } else {
+      hidePauseUI();
+    }
+  }
+
+
   let shakeOffset = vec2();
 
   if (G.shake.time > 0) {
@@ -205,16 +365,25 @@ function gameRender() {
 function gameRenderPost() {
   const font = engineFontImage;
   if (G.splash) {
-    funkyText('LITTLE', vec2(2.7,11), 3, false, G);
+    funkyText('LITTLE', vec2(2.7,10.7), 3, false, G);
     funkyText('SKI', vec2(6,7), 5, false, G);
     if (Math.sin(time*5) > 0) {
-      font.drawText(`READY?`, cameraPos, 1.3, true);
+      let pos = cameraPos.copy();
+      font.drawText(`READY?`, pos.add(vec2(0,-.15)), 1.3, true, BLACK);
+      font.drawText(`READY?`, pos, 1.3, true);
     }
     font.drawText(`code: eoinmcg`, cameraPos.add(vec2(-9, -12.5)), .7, false);
     font.drawText(`gfx: kenney.nl`, cameraPos.add(vec2(-9, -13.25)), .7, false);
     font.drawText(`music: @gruber_music`, cameraPos.add(vec2(-9, -14)), .7, false);
     return;
   }
+
+  // pause
+  let pos = vec2((G.width / 2) - 1.5, (G.height / 2) - 1.5);
+  drawTile(pos, vec2(2), tile(88));
+  // let size = vec2(.5, 1.5)
+  // drawRect(pos, size, BLACK);
+  // drawRect(pos.add(vec2(1 ,0)), size, BLACK);
 
   // left pad the score with 0s, so we have 0001 etc
   let score = Math.floor(G.score).toString().padStart(4, '0')
@@ -231,16 +400,23 @@ function gameRenderPost() {
 
   if (G.player && G.player.crashed) {
     funkyText('GAME OVER', vec2(0,-3), 2, true, G);
+    renderHiScore();
   }
 }
 
+
+function renderHiScore() {
+    const font = engineFontImage;
+  font.drawText('HI:'+G.hiScore, vec2(0,-10.1), 1.1, true, WHITE);
+  font.drawText('HI:'+G.hiScore, vec2(0,-10), 1.1, true, BLACK);
+}
 
 class Player extends EngineObject {
   constructor(game) {
     let size = 1.7;
     frame = Math.random() > .5 ? 70 : 82;
     super(
-      vec2(0, 3),
+      vec2(0, 7),
       vec2(size),
       tile(frame, game.tileSize)
     );
@@ -259,6 +435,7 @@ class Player extends EngineObject {
     this.setCollision(true, true, false, false);
 
     this.game = game;
+    this.shadow = new Color(0,0,0,0.1);
   }
 
   update() {
@@ -314,6 +491,17 @@ class Player extends EngineObject {
         this.trailCol, t.angle);
     });
 
+    if (!this.crashed) {
+      // shadow
+      drawCircle(this.pos.add(vec2(0,-1)), 2, this.shadow);
+      // left ski
+      drawRect(this.pos.add(vec2(-.4, -.5)), vec2(.4, 2.4), BLACK, this.angle);
+      drawRect(this.pos.add(vec2(-.4, -.5)), vec2(.2, 2), ORANGE, this.angle);
+      // right ski
+      drawRect(this.pos.add(vec2(.4, -.5)), vec2(.4, 2.4), BLACK, this.angle);
+      drawRect(this.pos.add(vec2(.4, -.5)), vec2(.2, 2), ORANGE, this.angle);
+    }
+
     drawTile(this.pos, this.size,
       tile(this.currentFrame, G.tileSize),
       undefined, this.angle);
@@ -338,7 +526,7 @@ class Player extends EngineObject {
     this.angle = 0;
     this.frame = 94;
     this.crashed = time;
-    playTune(36, 500);
+    playTune(36, 1000);
   }
 }
 
@@ -353,6 +541,7 @@ class Tree extends EngineObject {
 
     this.game = game;
     this.setCollision(true, false, false, false);
+    this.shadow = new Color(0,0,0,0.1);
   }
 
   update() {
@@ -366,13 +555,14 @@ class Tree extends EngineObject {
   }
 
   render() {
+    drawCircle(this.pos.add(vec2(0,-.5)), 2, this.shadow);
     drawTile( this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize)) 
   }
 }
 
 class Treat extends EngineObject {
   constructor(game) {
-    let frame = 92;
+    let frame = [90].rnd();
     let x = game.width / 2;
     let y = game.height / 2;
 
@@ -528,24 +718,83 @@ function funkyText(str, pos=cameraPos, scale = 2, crazy = true, game) {
 
 addEventListener("DOMContentLoaded", () => {
 
-  G.muteButton = document.querySelector('button.mute');
+  G.modalBackdrop = document.querySelector('#pause-backdrop');
+  G.modalDialog = document.querySelector('#pause-panel');
+  G.pauseUI = document.getElementById('pause-ui');
+  G.modalDialogClose = G.pauseUI.querySelector('button');
 
-  G.muteButton.addEventListener('click', (e) => {
+  G.modalDialogClose.addEventListener('click', (e) => {
+    hidePauseUI();
+  });
+
+  G.muteCheckbox = G.modalDialog.querySelector('input[name="mute"]');
+  G.muteCheckbox.addEventListener('change', e => {
     toggleMute();
   });
 
-  // fire up LittleJS with all the necessary functions and tiles(s)
+  const fullscreenCheckbox = G.modalDialog.querySelector('input[name="fullscreen"]');
+  fullscreenCheckbox.addEventListener('change', e => {
+    G.fullscreen = e.target.checked;
+    const root = document.querySelector('#game-root');
+
+    if (G.fullscreen)
+      root.requestFullscreen();
+    else
+      document.exitFullscreen();
+  });
+
+  const clearScores = G.modalDialog.querySelector('label.clear-scores');
+  clearScores.addEventListener('click', e => {
+    G.sfx.play('hit');
+    try {
+      window.localStorage.clear();
+      G.hiScore = 10;
+      G.newHiscore = false;
+    } catch(e) { }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    window.setTimeout(() => {
+      // sync checkbox
+      fullscreenCheckbox.checked = (document.fullscreenElement !== null)
+    }, 500)
+  });
+
   engineInit(
     gameInit,
     gameUpdate, gameUpdatePost,
     gameRender, gameRenderPost,
-    G.tiles
+    G.tiles,
+    document.querySelector('#game-root'),
   );
   console.log('-----------------------')
   console.log('Wanna see how this game was made? Check out the tutorial:')
   console.log('https://eoinmcgrath.com/little-ski/tutorial.html')
 });
 
+
 </script>
+
+<div id="game-root">
+  <div id="pause-ui" hidden>
+    <div id="pause-backdrop"></div>
+    <div id="pause-panel">
+      <button>Close</button>
+      <h1>Paused</h1>
+      <label>
+        <input type="checkbox" name="fullscreen" id="fullscreenToggle">
+        Fullscreen
+      </label>
+      <label>
+        <input type="checkbox" name="mute" id="muteToggle">
+        Mute
+      </label>
+      <label class="clear-scores">
+            Clear scores
+      </label>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

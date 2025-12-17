@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>LittleJS Ski - Step 2</title>
-<script src="https://cdn.jsdelivr.net/npm/littlejsengine@1.11.2/dist/littlejs.js"> </script>
+<script src="https://cdn.jsdelivr.net/npm/littlejsengine@1.17.11/dist/littlejs.js"></script>
+
 </head>
 <body>
 
@@ -13,36 +14,41 @@
 // create a simple a object that defines
 // some basic settings for our game
 const G = {
-  width: 320, height: 480,
+  // Logical grid size (in tiles)
+  width: 20, height: 30,
+  // Size of one tile in screen pixels
   tileSize: 16,
   tiles: ['public/ski_tiles.png'],
 }
 
-// check for touch controls
-touchInputInit();
-
 // called once, when the game is initialized
 // set up screen size and camera.
 function gameInit() {
+  // Compute the fixed canvas size in screen pixels
+  // (logical tiles × tile size)
+  const gameSize = vec2(
+    G.width * G.tileSize,
+    G.height * G.tileSize
+  );
 
-  // game dimensions stored inside a vector
-  const gameSize = vec2(G.width, G.height);
+  // Lock the canvas to an exact pixel size
+  // This prevents browser scaling and keeps pixels crisp
   setCanvasFixedSize(gameSize);
-  setCanvasMaxSize(gameSize);
 
-  // convert game dimensions to tile size
-  G.size = vec2(G.width / G.tileSize, G.height / G.tileSize);
+  // Cache the logical grid size as a vector (tiles, not pixels)
+  G.size = vec2(G.width, G.height);
 
-  // center of the screen
-  G.center = vec2(G.size.x/2,G.size.y/2)
+  // World-space center point (origin-based)
+  // Useful for camera positioning, spawning, etc.
+  G.center = vec2(0);
 
-  // position camera in middle of screen
-  setCameraPos(G.center); 
-  // scale 1:1 with our tilesize (16x16)
+  // Set camera scale so that:
+  // 1 world unit == 1 tile
+  // (i.e. a 1×1 object renders as 16×16 pixels)
   cameraScale = G.tileSize;
 
   // create our player
-  G.player = new Player();
+  G.player = new Player(G);
 
 }
 
@@ -55,7 +61,7 @@ function gameUpdate() {
 
 function gameRender() {
   // clear the screen with a white rectangle
-  drawRect(G.center, G.size, new Color().setHex('#ffffff'));
+  drawRect(cameraPos, G.size, WHITE);
 }
 
 // called after gameUpdate
@@ -73,18 +79,18 @@ engineInit(
 
 
 class Player extends EngineObject {
-  constructor() {
+  constructor(game) {
     let size = 1.5, frame = 71;
     super(
-      G.center,
+      cameraPos,
       vec2(size),
-      tile(frame, G.tileSize)
+      tile(frame, game.tileSize)
     );
 
     // edge of screen, left
-    this.minX = 1;
+    this.minX = (game.width-2) / -2;
     // edge of screen, right
-    this.maxX = (G.width / G.tileSize) -1;
+    this.maxX = (game.width-2) / 2;
 
     // horizontal direction of player
     this.dir = 0;
@@ -93,8 +99,6 @@ class Player extends EngineObject {
 
   update() {
     super.update();
-      console.log(mouseWasPressed(0))
-
     if (mouseWasPressed(0) || keyWasPressed('Space')) {
       this.velocity.x = (this.velocity.x === 0)
         ? .1
@@ -121,4 +125,3 @@ class Player extends EngineObject {
 
 </body>
 </html>
-

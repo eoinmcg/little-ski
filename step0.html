@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>LittleJS Ski - Step 0</title>
-<script src="https://cdn.jsdelivr.net/npm/littlejsengine@1.11.2/dist/littlejs.js"> </script>
+<script src="https://cdn.jsdelivr.net/npm/littlejsengine@1.17.11/dist/littlejs.js"></script>
 </head>
 <body>
 
@@ -13,32 +13,22 @@
 // create a simple a object that defines
 // some basic settings for our game
 const G = {
-  width: 320, height: 480,
+  width: 20, height: 30,
   tileSize: 16,
   tiles: ['public/ski_tiles.png'],
 }
 
-// check for touch controls
-touchInputInit();
 
 // called once, when the game is initialized
 // set up screen size and camera.
 function gameInit() {
 
   // game dimensions stored inside a vector
-  const gameSize = vec2(G.width, G.height);
+  const gameSize = vec2(G.width * G.tileSize, G.height * G.tileSize);
   setCanvasFixedSize(gameSize);
-  setCanvasMaxSize(gameSize);
 
-  // convert game dimensions to tile size
-  G.size = vec2(G.width / G.tileSize, G.height / G.tileSize);
+  G.center = vec2(0);
 
-  // center of the screen
-  G.center = vec2(G.size.x/2,G.size.y/2)
-
-  // position camera in middle of screen
-  setCameraPos(G.center); 
-  // scale 1:1 with our tilesize (16x16)
   cameraScale = G.tileSize;
 
 }
@@ -52,7 +42,7 @@ function gameUpdate() {
 
 function gameRender() {
   // clear the screen with a white rectangle
-  drawRect(G.center, G.size, new Color().setHex('#ffffff'));
+  drawRect(vec2(0), vec2(G.width, G.height), new Color().setHex('#ffffff'));
   // draw an image to the screen
   drawTile(
     G.center, // position (vector)

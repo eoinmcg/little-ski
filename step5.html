@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>LittleJS Ski - Step 5</title>
-<script src="https://cdn.jsdelivr.net/npm/littlejsengine@1.11.2/dist/littlejs.js"> </script>
+<script src="https://cdn.jsdelivr.net/npm/littlejsengine@1.17.11/dist/littlejs.js"></script>
 </head>
 <body>
 
@@ -13,7 +13,9 @@
 // create a simple a object that defines
 // some basic settings for our game
 const G = {
-  width: 320, height: 480,
+  // Logical grid size (in tiles)
+  width: 20, height: 30,
+  // Size of one tile in screen pixels
   tileSize: 16,
   tiles: ['public/ski_tiles.png'],
   cols: {
@@ -27,30 +29,34 @@ const G = {
   }
 }
 
-// check for touch controls
-touchInputInit();
-
 // called once, when the game is initialized
 // set up screen size and camera.
 function gameInit() {
-  // game dimensions stored inside a vector
-  const gameSize = vec2(G.width, G.height);
+  // Compute the fixed canvas size in screen pixels
+  // (logical tiles × tile size)
+  const gameSize = vec2(
+    G.width * G.tileSize,
+    G.height * G.tileSize
+  );
+
+  // Lock the canvas to an exact pixel size
+  // This prevents browser scaling and keeps pixels crisp
   setCanvasFixedSize(gameSize);
-  setCanvasMaxSize(gameSize);
 
-  // convert game dimensions to tile size
-  G.size = vec2(G.width / G.tileSize, G.height / G.tileSize);
+  // Cache the logical grid size as a vector (tiles, not pixels)
+  G.size = vec2(G.width, G.height);
 
-  // center of the screen
-  G.center = vec2(G.size.x/2,G.size.y/2)
+  // World-space center point (origin-based)
+  // Useful for camera positioning, spawning, etc.
+  G.center = vec2(0);
 
-  // position camera in middle of screen
-  setCameraPos(G.center); 
-  // scale 1:1 with our tilesize (16x16)
+  // Set camera scale so that:
+  // 1 world unit == 1 tile
+  // (i.e. a 1×1 object renders as 16×16 pixels)
   cameraScale = G.tileSize;
 
   // create our player
-  G.player = new Player();
+  G.player = new Player(G);
   G.speed = 0.1;
 }
 
@@ -74,8 +80,8 @@ function gameUpdatePost() { }
 // called after gameRender. Useful for adding UI
 function gameRenderPost() {
   if (G.player.crashed && Math.sin(time * 5) > 0) {
-    drawTextOverlay('GAME OVER', 
-      vec2(G.size.x/2, G.size.y / 1.5),  // position
+    drawText('GAME OVER',
+      G.center.add(vec2(0, 3)),
       2,                                 // size
       new Color().setHex('#ff0000'),     // red color
       .5);                               // outline size
@@ -92,7 +98,7 @@ engineInit(
 
 
 class Player extends EngineObject {
-  constructor() {
+  constructor(game) {
     let size = 1.5, frame = 70;
     super(
       G.center,
@@ -100,8 +106,10 @@ class Player extends EngineObject {
       tile(frame, G.tileSize)
     );
 
-    this.minX = 1;
-    this.maxX = (G.width / G.tileSize) -1;
+    // edge of screen, left
+    this.minX = (game.width-2) / -2;
+    // edge of screen, right
+    this.maxX = (game.width-2) / 2;
 
     // horizontal direction of player
     this.dir = 0;
@@ -165,7 +173,11 @@ class Player extends EngineObject {
 
 class Tree extends EngineObject {
   constructor(game) {
-    let pos = vec2(rand(1,game.size.x-1), -2);
+    let x = game.width / 2;
+    // start off the bottom of screen
+    let y = (game.height / -2) - 2;
+    let pos = vec2(rand(-x, x), y);
+
     let frame = 30;
     super(pos, vec2(.5), tile(frame, game.tileSize));
 
@@ -178,13 +190,13 @@ class Tree extends EngineObject {
     this.pos.y += this.game.speed;
 
     // remove object when past top of screen
-    if (this.pos.y > this.game.size.y) {
+    if (this.pos.y > this.game.height / 2) {
       super.destroy();
     }
   }
 
   render() {
-    drawTile( this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize)) 
+    drawTile(this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize)) 
   }
 }
 

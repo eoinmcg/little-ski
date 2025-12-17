@@ -28,19 +28,21 @@ html ,body { background: #333; }
   display 1s allow-discrete,
   overlay 1s allow-discrete,
   opacity 1s ease,
-  pointer-events 1s allow-discrete;
-  pointer-events: auto;
+  /* pointer-events 1s allow-discrete; */
+  /* pointer-events: auto; */
 }
 /* The "Entrance" state */
 @starting-style {
-  #pause-ui { opacity: 0; pointer-events: none; }
+  #pause-ui { opacity: 0;
+    /* pointer-events: none;  */
+  }
   #pause-ui #pause-panel { top: -100%; }
 }
 
 #pause-ui[hidden] {
   display: none;
   opacity: 0;
-  pointer-events: none;
+  /* pointer-events: none; */
 }
 
 #pause-backdrop {

@@ -125,6 +125,7 @@ const G = {
     yellow: new Color().setHex('#ffff00'),
     snow: new Color().setHex('#cfe7f7'),
     lightBlue: new Color().setHex('#29adff'),
+    medBlue: new Color().setHex('#005784'),
     slate: new Color().setHex('#343635'),
     skyLight: new Color().setHex('#ffccaa'),
     skyMed: new Color().setHex('#ff77a8'),
@@ -357,7 +358,6 @@ function gameUpdatePost() {
 }
 
 function gameRender() {
-
   if (G.splash) {
     splashRender();
     return;
@@ -367,14 +367,17 @@ function gameRender() {
 }
 
 function gameRenderPost() {
-  const font = engineFontImage;
   if (G.splash) {
     funkyText('LITTLE', vec2(2.7,10.7), 3, false, G);
     funkyText('SKI', vec2(6,7), 5, false, G);
     funkyText('READY?', vec2(4, 0), 2, true, G);
-    font.drawText(`code: eoinmcg`, cameraPos.add(vec2(-9, -12.5)), .7, false);
-    font.drawText(`gfx: kenney.nl`, cameraPos.add(vec2(-9, -13.25)), .7, false);
-    font.drawText(`music: @gruber_music`, cameraPos.add(vec2(-9, -14)), .7, false);
+    let y = -12.5;
+    let x = (G.width / 2) - .5;
+    let size = .8;
+    let col = G.cols.medBlue;
+    drawText(`code: eoinmcg`, cameraPos.add(vec2(x, y)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
+    drawText(`gfx: kenney.nl`, cameraPos.add(vec2(x, y-1)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
+    drawText(`music: @gruber_music`, cameraPos.add(vec2(x, y-2)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
     return;
   }
 
@@ -392,11 +395,15 @@ function gameRenderPost() {
       startPos.add(vec2(index * 1.75, 0)),
       vec2(2.5), // digit size
       tile(96 + num, G.tileSize), // 96 is the frame for 0
+      G.newHiscore ? YELLOW : WHITE,
     );
   });
 
-  if (G.player && G.player.crashed) {
+  if ((G.player && G.player.crashed)) {
     funkyText('GAME OVER', vec2(0,-3), 2, true, G);
+    renderHiScore();
+  }
+  if (getPaused()) {
     renderHiScore();
   }
 }
@@ -404,8 +411,7 @@ function gameRenderPost() {
 
 function renderHiScore() {
   const font = engineFontImage;
-  font.drawText('HI:'+G.hiScore, vec2(0,-10.1), 1.1, true, WHITE);
-  font.drawText('HI:'+G.hiScore, vec2(0,-10), 1.1, true, BLACK);
+  drawText('HI: '+G.hiScore, vec2(0,-10), 1.5, WHITE, .5, G.cols.medBlue, 'center', 'monospace', 'bold');
 
 }
 

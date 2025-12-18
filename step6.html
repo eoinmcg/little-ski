@@ -161,8 +161,8 @@ class Player extends EngineObject {
     this.trail.push({pos: this.pos.copy(), angle: this.angle});
     // remove any entries that are now off screen
     this.trail = this.trail.filter(t => {
-        t.pos.y += this.game.speed;
-        return t.pos.y <= this.game.height; 
+        t.pos.y += G.speed;
+        return t.pos.y <= G.height;
     });
 
   }

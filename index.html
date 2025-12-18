@@ -244,6 +244,13 @@ function splashRender() {
   drawRect(vec2().add(vec2(0,-4)), vec2(G.width, G.height/2), G.cols.skyMed)
   drawRect(vec2().add(vec2(0,-7)), vec2(G.width, G.height/4), G.cols.skyLight)
 
+  drawRect(vec2(0,3), vec2(G.width, .5), G.cols.skyDark);
+  drawRect(vec2(0,2.3), vec2(G.width, .25), G.cols.skyDark);
+
+  drawRect(vec2(0,-3.8), vec2(G.width, .5), G.cols.skyMed);
+  drawRect(vec2(0,-4.4), vec2(G.width, .25), G.cols.skyMed);
+
+
   // bg mtns
   drawRect(vec2(-8, -10), vec2(6, 6), G.cols.slate, PI/4)
   drawRect(vec2(8, -10), vec2(7), G.cols.slate, PI/4)

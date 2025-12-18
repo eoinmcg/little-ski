@@ -269,9 +269,34 @@ engineInit(
           object.</p>
 
           <p>The center of the screen is vec2(0,0)
-            <br> top left vec2(-10, -10)
-            <br> bottom right vec2(10, 10)
+            <br>X increases to the right,
+            <br>Y increases upward (negative Y is down).
+            <br> top left vec2(-10, 15)
+            <br> bottom right vec2(10, -15)
           </p>
+
+          <pre><code>
+                 +Y (up)
+                  ↑
+                  |
+   top-left       |                top-right
+ vec2(-10, 15)    |             vec2(10, 15)
+                  |
+                  |
+                  |        vec2(0, 0)
+                  |     (screen center)
+                  |
+                  |
+ vec2(-10, -15)   |             vec2(10, -15)
+ bottom-left      |                bottom-right
+                  |
+                  ↓
+                 -Y (down)
+
+        ←────────────── X ──────────────→
+              -X (left)        +X (right)
+          </code> </pre>
+
         </div>
 
       </section>

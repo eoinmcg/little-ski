@@ -148,7 +148,7 @@ const G = {
   mute: false,
   shake: {
     time: 0,
-    force: .4,
+    strength: .4,
   },
 }
 
@@ -643,7 +643,7 @@ class Treat extends EngineObject {
 
 class Bg extends EngineObject {
   constructor(pos, game) {
-    super(pos, vec2(rand(1,3)), tile(3, game.t))
+    super(pos, vec2(rand(1,3)), tile(3, game.tileSize))
     this.renderOrder = 0;
     this.game = game;
   }

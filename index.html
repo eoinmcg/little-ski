@@ -667,15 +667,16 @@ class Treat extends EngineObject {
     // cos(x) gives us the derivative of sin(x)
     let cosValue = Math.cos(time * this.glimmerSpeed);
 
-      this.off = clamp(sineValue * .5, -.2, .2);
+    this.off = clamp(sineValue * .5, -.2, .2);
+    this.shadow = new Color(0,0,0,0.1);
   }
 
   render() {
-    // image
-    this.renderGlimmer();
-    drawTile(this.pos.add(vec2(0, .5)), vec2(3, 1.5), tile(107, 16), undefined, 0, new Color(0,0,0,1));
     // shadow
+    drawCircle(this.pos.add(vec2(0,-.5)), 1.5-(this.wave/2), this.shadow);
+    // image
     drawTile(this.pos.add(vec2(0, this.wave)), vec2(1.5), tile(this.frame, 16));
+    this.renderGlimmer();
   }
 
   renderGlimmer() {

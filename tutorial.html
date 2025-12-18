@@ -779,12 +779,11 @@ const G = {
 <pre><code class="language-javascript">
     this.trail.push({pos: this.pos.copy(), angle: this.angle});
     // remove any entries that are now off screen
-    this.trail.forEach((t, i) => {
-      t.pos.y += G.speed;
-      if (t.pos.y > G.size.y) {
-        this.trail.splice(i, 1);
-      }
+    this.trail = this.trail.filter(t =&gt; {
+        t.pos.y += G.speed;
+        return t.pos.y &lt;= G.height;
     });
+
 </code></pre>
 
         <p>

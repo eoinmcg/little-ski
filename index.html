@@ -24,16 +24,8 @@ html ,body { background: #333; }
   position: fixed;
   inset: 0;
   z-index: 10001;
-  transition:
-  display 1s allow-discrete,
-  overlay 1s allow-discrete,
-  opacity 1s ease,
-}
-/* The "Entrance" state */
-@starting-style {
-  #pause-ui { opacity: 0;
-  }
-  #pause-ui #pause-panel { top: -100%; }
+  opacity: 1;
+  transition: opacity 0.3s ease, display 0.3s allow-discrete;
 }
 
 #pause-ui[hidden] {
@@ -41,20 +33,20 @@ html ,body { background: #333; }
   opacity: 0;
 }
 
+@starting-style {
+  #pause-ui { opacity: 0; }
+  #pause-ui #pause-panel { top: -100%; }
+}
+
 #pause-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0,0,0,.5);
+  transition: background 0.3s ease;
 }
-
-#pause-ui #pause-panel {
-  position: relative;
-  top: 40%;
-  transition: top 1s ease;
-}
-#pause-ui[hidden] #pause-panel { top: -100%; }
 
 #pause-panel {
+  position: relative;
   inset: 0;
   font-family: monospace;
   border: 5px solid #fff;
@@ -67,6 +59,12 @@ html ,body { background: #333; }
   color: white;
   z-index: 999999;
   box-shadow: 5px 5px 0px black;
+  top: 40%;
+  transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#pause-ui[hidden] #pause-panel {
+  top: -100%;
 }
 #pause-panel { font-size: clamp(18px, 2.5vw, 20px); min-width: 280px; border-radius: 10px; }
 #pause-panel h1 { font-size: 1.6em; margin: 0 0 1rem 0; }
@@ -152,7 +150,7 @@ const G = {
 }
 
 G.medals = [
-  new Medal(0, 'Hiscore', 'GOT A HISCORE!', '🥇')
+  new Medal(0, 'Hiscore', 'GOT A NEW HISCORE!', '🥇')
 ];
 
 if (window.location.hostname !== 'localhost') {
@@ -172,10 +170,6 @@ function gameInit() {
   setCanvasPixelated(true);
   setTileDefaultBleed(.5);
 
-
-  medalsInit('little-ski');
-  medalsForEach(medal=> medal.unlocked = false);
-
   let snowflakes = 20;
   while(snowflakes--) { new Snow(G); }
 
@@ -191,6 +185,9 @@ function startGame() {
 
   G.plays += 1;
   G.newHiscore = false;
+
+  medalsInit('little-ski');
+  medalsForEach(medal=> medal.unlocked = false);
 
   // background
   let halfH = G.height / 2;
@@ -208,6 +205,8 @@ function startGame() {
   G.player = new Player(G);
   G.splash = false;
   G.newHiscore = false;
+
+  new Treat(G);
 
 }
 
@@ -574,11 +573,15 @@ class Treat extends EngineObject {
     this.game = game;
     this.frame = frame;
 
+    this.off = vec2();
+    this.glimmerSpeed = 5; // (higher = faster)
+
     this.setCollision(true, false, false, false);
   }
 
   update() {
     this.wave = Math.abs(Math.sin(new Date().getTime() * 0.0005));
+    this.updateGlimmer();
     super.update();
     this.pos.y += this.game.speed;
     if (this.pos.y > this.game.height / 2) {
@@ -586,11 +589,38 @@ class Treat extends EngineObject {
     }
   }
 
+  updateGlimmer() {
+    // Calculate position of glimmer with faster movement
+    let sineValue = Math.sin(time * this.glimmerSpeed);
+    
+    // Check if sine wave is moving in positive direction (derivative > 0)
+    // cos(x) gives us the derivative of sin(x)
+    let cosValue = Math.cos(time * this.glimmerSpeed);
+    
+    // Only update offset when moving in positive direction
+    // if (cosValue > 0) {
+      this.off = clamp(sineValue * .5, -.2, .2);
+    // } else {
+    //   this.off = -1; // Set to invalid value to hide glimmer
+    // }
+  }
+
   render() {
     // image
-    drawTile(this.pos.add(vec2(0, -.5)), vec2(3, 1.5), tile(107, 16), undefined, 0, new Color(0,0,0,1));
+    drawTile(this.pos.add(vec2(0, .5)), vec2(3, 1.5), tile(107, 16), undefined, 0, new Color(0,0,0,1));
+    this.renderGlimmer();
     // shadow
     drawTile(this.pos.add(vec2(0, this.wave)), vec2(1.5), tile(this.frame, 16));
+  }
+
+  renderGlimmer() {
+    let col = WHITE;
+      let p = this.pos.add(vec2(this.off)).add(vec2(-1, 1));
+      drawRect(p, vec2(.2), col);
+      if (this.off >= .2) {
+        drawLine(p.add(vec2(-.6,0)), p.add(vec2(.6,0)), .2, col);
+        drawLine(p.add(vec2(0,-.6)), p.add(vec2(0,.6)), .2, col);
+      }
   }
 }
 

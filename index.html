@@ -182,7 +182,11 @@ function addSnow(num = 40) {
   while(snowflakes--) { new Snow(G); }
 }
 
-function removeSnow() { }
+function removeSnow() {
+  for (const o of engineObjects) {
+    if (o.name === 'snow') o.destroy();
+  }
+}
 
 function startGame() {
   inputClear();
@@ -236,10 +240,7 @@ function splashUpdate() {
 
 function splashRender() {
 
-  // drawRectGradient(vec2(), vec2(G.width, G.height), G.cols.skyDark, G.cols.skyMed)
-  // drawRectGradient(vec2().add(vec2(0,-4)), vec2(G.width, G.height/4), G.cols.skyLight, CLEAR_BLACK)
-
-  // drawRectGradient(vec2(0, 15), vec2(G.width, 7), new Color(0,0,0,1), new Color(0,0,0, .01));
+  // sky
   drawRect(vec2(), vec2(G.width, G.height), G.cols.skyDark);
   drawRect(vec2().add(vec2(0,-4)), vec2(G.width, G.height/2), G.cols.skyMed)
   drawRect(vec2().add(vec2(0,-7)), vec2(G.width, G.height/4), G.cols.skyLight)
@@ -255,8 +256,10 @@ function splashRender() {
   drawRect(vec2(-8, -10), vec2(6, 6), G.cols.slate, PI/4)
   drawRect(vec2(8, -10), vec2(7), G.cols.slate, PI/4)
 
+  // main mtn
   drawRect(vec2(0, -14), vec2(18, 18).add(vec2(.75)), G.cols.slate, PI/4)
   drawRect(vec2(0, -14), vec2(18, 18), G.cols.lightBlue, PI/4)
+  // snow cap
   drawRect(vec2(0, -4), vec2(4, 4), WHITE, PI/4)
   drawRect(vec2(2.4, -5), vec2(2, 2), WHITE, PI/4)
   drawRect(vec2(-2.4, -5), vec2(2, 2), WHITE, PI/4)
@@ -574,7 +577,7 @@ class Tree extends EngineObject {
 
   render() {
     drawCircle(this.pos.add(vec2(0,-.5)), 2, this.shadow);
-    drawTile( this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize)) 
+    drawTile( this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize));
   }
 }
 
@@ -668,6 +671,7 @@ class Snow extends EngineObject {
     this.game = game;
     this.speed = this.size.x / 20;
     this.startX = this.pos.x
+    this.name = 'snow';
   }
 
   update() {

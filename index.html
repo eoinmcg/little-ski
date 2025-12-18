@@ -4,11 +4,14 @@
 <meta charset="UTF-8">
 <title>LittleJS Ski</title>
 
+<link rel="manifest" href="manifest.json">
+
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes" />
 
-<script src="https://cdn.jsdelivr.net/npm/littlejsengine@1.17.11/dist/littlejs.js"></script>
+<script src="public/js/littlejs.min.js"></script>
 <!-- Play pico-8 tunes in js: https://github.com/codyebberson/pico8-music -->
 <script src="public/js/p8-music.js"></script>
 <!-- Awesome collection of CC tunes: https://www.lexaloffle.com/bbs/?tid=29008-->
@@ -17,6 +20,7 @@
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 
 <script defer src="https://cloud.umami.is/script.js" data-website-id="6a7a59ee-cea7-4517-8aac-1aa3347fb5da"></script>
+<script src="sw.js"></script>
 
 <style>
 html ,body { background: #333; }
@@ -79,6 +83,20 @@ html ,body { background: #333; }
 #pause-panel label.clear-scores { padding-left: 2rem; width: 90%; }
 #pause-panel label:hover { cursor: pointer; background: yellow; color: black; }
 #pause-panel label input { margin-right: 1rem; }
+#pause-panel #install-button {
+  position: relative;
+  font: bold 1.2rem monospace;
+  margin: 1rem 0 1rem 2rem;
+  text-indent:0;
+  width: 90%;
+  background: orange;
+  color: black;
+}
+#pause-panel #install-button:hover {
+  cursor: pointer;
+  background: green;
+  color: white;
+}
 #pause-panel button {
   position: absolute;
   top: 10px;
@@ -103,6 +121,10 @@ html ,body { background: #333; }
 
 <script>
 'use strict';
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
 
 // naughty, naughty
 Array.prototype.rnd = function () {
@@ -173,8 +195,18 @@ function gameInit() {
   setCanvasPixelated(true);
   setTileDefaultBleed(.5);
 
+  checkIOSInstall();
   addSnow();
 
+}
+
+function checkIOSInstall() {
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isInstalled = window.navigator.standalone === true;
+
+  if (isIOS && !isInstalled) {
+    document.getElementById('ios-install-message').style.display = 'block';
+  }
 }
 
 function addSnow(num = 40) {
@@ -811,6 +843,42 @@ addEventListener("DOMContentLoaded", () => {
     }, 500)
   });
 
+  let deferredPrompt;
+  const installLabel = document.getElementById('install-label');
+  const installBtn = document.getElementById('install-button');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later
+    deferredPrompt = e;
+    // Update UI to show the install button because we know it's NOT installed
+    installLabel.style.display = 'block';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    
+    // Show the install prompt
+    deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install: ${outcome}`);
+    
+    // We've used the prompt, and can't use it again
+    deferredPrompt = null;
+    // Hide the button
+    installLabel.style.display = 'none';
+  });
+
+  // Hide the button if the app is successfully installed
+  window.addEventListener('appinstalled', () => {
+    installLabel.style.display = 'none';
+    deferredPrompt = null;
+    console.log('PWA installed');
+  });
+
   engineInit(
     gameInit,
     gameUpdate, gameUpdatePost,
@@ -843,6 +911,19 @@ addEventListener("DOMContentLoaded", () => {
       <label class="clear-scores">
             Clear scores
       </label>
+      <div id="install-label" style="display: none;">
+          <button id="install-button">
+              Install App
+          </button>
+      </div>
+    <div id="ios-install-message" style="display: none; background: #222; border: 1px solid #444; padding: 10px; margin-top: 10px; border-radius: 8px; font-size: 14px; text-align: left;">
+        <p style="margin: 0 0 8px 0; color: #fff;"><b>Play Offline on iPhone:</b></p>
+        <ol style="margin: 0; padding-left: 20px; color: #ccc;">
+            <li>Tap the <b>Share</b> button </li>
+            <li>Scroll down and tap <b>Add to Home Screen</b></li>
+        </ol>
+    </div>
+
     </div>
   </div>
 </div>

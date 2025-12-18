@@ -1,0 +1,17 @@
+{
+  "name": "LittleJS Ski",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "short_name": "LittleSki",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#cfe7f7",
+  "theme_color": "#005784",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

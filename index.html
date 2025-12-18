@@ -28,13 +28,10 @@ html ,body { background: #333; }
   display 1s allow-discrete,
   overlay 1s allow-discrete,
   opacity 1s ease,
-  /* pointer-events 1s allow-discrete; */
-  /* pointer-events: auto; */
 }
 /* The "Entrance" state */
 @starting-style {
   #pause-ui { opacity: 0;
-    /* pointer-events: none;  */
   }
   #pause-ui #pause-panel { top: -100%; }
 }
@@ -42,7 +39,6 @@ html ,body { background: #333; }
 #pause-ui[hidden] {
   display: none;
   opacity: 0;
-  /* pointer-events: none; */
 }
 
 #pause-backdrop {
@@ -257,6 +253,7 @@ function splashRender() {
 
 function showPauseUI() {
   inputClear();
+  setInputPreventDefault(false);
   setPaused(true);
   G.pauseUI.hidden = false;
   if (!G.audio) return;
@@ -265,6 +262,7 @@ function showPauseUI() {
 
 function hidePauseUI() {
   inputClear();
+  setInputPreventDefault(true);
   G.pauseUI.hidden = true;
   setPaused(false);
   if (!G.audio || G.mute) return;

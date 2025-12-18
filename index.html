@@ -72,16 +72,27 @@ html ,body { background: #333; }
 #pause-ui[hidden] #pause-panel {
   top: -100%;
 }
-#pause-panel { font-size: clamp(18px, 2.5vw, 20px); min-width: 280px; }
-#pause-panel h1 { font-size: 1.6em; margin: 0 0 1rem 0; }
-#pause-panel h2 { font-size: 1.25em; }
-#pause-panel label { 
+#pause-panel {
+  font-size: clamp(18px, 2.5vw, 20px);
+  min-width: 280px;
+  text-shadow: 1px 1px 2px #000;
+}
+#pause-panel h1 {
+  font-size: 1.6em;
+  margin: 0 0 1rem 0;
+}
+#pause-panel label {
   display: block; width: 100%;
   padding: .5rem 0;
   border-radius: 5px;
 }
 #pause-panel label.clear-scores { padding-left: 2rem; width: 90%; }
-#pause-panel label:hover { cursor: pointer; background: yellow; color: black; }
+#pause-panel label:hover {
+  text-shadow: 1px 1px 2px orange;
+  cursor: pointer;
+  background: yellow;
+  color: black;
+}
 #pause-panel label input { margin-right: 1rem; }
 #pause-panel #install-button {
   position: relative;
@@ -208,6 +219,14 @@ function checkIOSInstall() {
     document.getElementById('ios-install-message').style.display = 'block';
   }
 }
+
+
+function triggerCrashVibration() {
+  if ('vibrate' in navigator) {
+    // A heavy thud followed by a smaller shudder
+    navigator.vibrate([100, 50, 100]);
+  }
+};
 
 function addSnow(num = 40) {
   let snowflakes = num;
@@ -570,6 +589,7 @@ class Player extends EngineObject {
 
     particlesCrash(this.pos, this.game);
     this.game.shake.time = .3;
+    triggerCrashVibration();
     this.game.sfx.play('hit', this.pos);
     this.game.speed = 0;
     this.velocity.x = 0;
@@ -613,7 +633,8 @@ class Tree extends EngineObject {
 
 class Treat extends EngineObject {
   constructor(game) {
-    let frame = [92].rnd();
+    let t = 92; // 90: beer, 91: pizza, 93: donut
+    let frame = [t].rnd();
     let x = game.width / 2;
     let y = game.height / 2;
 
@@ -641,23 +662,18 @@ class Treat extends EngineObject {
   updateGlimmer() {
     // Calculate position of glimmer with faster movement
     let sineValue = Math.sin(time * this.glimmerSpeed);
-    
+
     // Check if sine wave is moving in positive direction (derivative > 0)
     // cos(x) gives us the derivative of sin(x)
     let cosValue = Math.cos(time * this.glimmerSpeed);
-    
-    // Only update offset when moving in positive direction
-    // if (cosValue > 0) {
+
       this.off = clamp(sineValue * .5, -.2, .2);
-    // } else {
-    //   this.off = -1; // Set to invalid value to hide glimmer
-    // }
   }
 
   render() {
     // image
-    drawTile(this.pos.add(vec2(0, .5)), vec2(3, 1.5), tile(107, 16), undefined, 0, new Color(0,0,0,1));
     this.renderGlimmer();
+    drawTile(this.pos.add(vec2(0, .5)), vec2(3, 1.5), tile(107, 16), undefined, 0, new Color(0,0,0,1));
     // shadow
     drawTile(this.pos.add(vec2(0, this.wave)), vec2(1.5), tile(this.frame, 16));
   }
@@ -665,10 +681,10 @@ class Treat extends EngineObject {
   renderGlimmer() {
     let col = WHITE;
       let p = this.pos.add(vec2(this.off)).add(vec2(-1, 1));
-      drawRect(p, vec2(.2), col);
       if (this.off >= .2) {
         drawLine(p.add(vec2(-.6,0)), p.add(vec2(.6,0)), .2, col, undefined, time, true);
         drawLine(p.add(vec2(0,-.6)), p.add(vec2(0,.6)), .2, col, undefined, time, true);
+        // drawTile( p, vec2(1), tile(89), WHITE, time * 3);
       }
   }
 }
@@ -886,8 +902,8 @@ addEventListener("DOMContentLoaded", () => {
     G.tiles,
     document.querySelector('#game-root'),
   );
-  console.log('-----------------------')
-  console.log('Wanna see how this game was made? Check out the tutorial:')
+  console.log('🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔')
+  console.log('🏂 Wanna see how this game was made? Check out the tutorial:')
   console.log('https://eoinmcgrath.com/little-ski/tutorial.html')
 });
 

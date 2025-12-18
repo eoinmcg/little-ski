@@ -49,16 +49,18 @@ html ,body { background: #333; }
   position: relative;
   inset: 0;
   font-family: monospace;
-  border: 5px solid #fff;
+  border: 5px solid #2f484e;
+  border: 5px solid black;
   margin: auto;
   width: min(90vw, 320px);
   height: fit-content;
-  background: #222;
+  background: #005784;
+  background: #1b2632;
   padding: 1em;
-  border-radius: 12px;
   color: white;
   z-index: 999999;
-  box-shadow: 5px 5px 0px black;
+  border-radius: 0;
+  box-shadow: 10px 10px 0px rgba(0,0,0,.5);
   top: 40%;
   transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -66,7 +68,7 @@ html ,body { background: #333; }
 #pause-ui[hidden] #pause-panel {
   top: -100%;
 }
-#pause-panel { font-size: clamp(18px, 2.5vw, 20px); min-width: 280px; border-radius: 10px; }
+#pause-panel { font-size: clamp(18px, 2.5vw, 20px); min-width: 280px; }
 #pause-panel h1 { font-size: 1.6em; margin: 0 0 1rem 0; }
 #pause-panel h2 { font-size: 1.25em; }
 #pause-panel label { 
@@ -247,7 +249,7 @@ function splashRender() {
   drawRect(vec2(3.2, -5.5), vec2(1.5), WHITE, PI/4)
   drawRect(vec2(-3.2, -5.5), vec2(1.5), WHITE, PI/4)
 
-    renderHiScore();
+  renderHiScore();
 }
 
 function showPauseUI() {
@@ -369,11 +371,7 @@ function gameRenderPost() {
   if (G.splash) {
     funkyText('LITTLE', vec2(2.7,10.7), 3, false, G);
     funkyText('SKI', vec2(6,7), 5, false, G);
-    if (Math.sin(time*5) > 0) {
-      let pos = cameraPos.copy();
-      font.drawText(`READY?`, pos.add(vec2(0,-.15)), 1.3, true, BLACK);
-      font.drawText(`READY?`, pos, 1.3, true);
-    }
+    funkyText('READY?', vec2(4, 0), 2, true, G);
     font.drawText(`code: eoinmcg`, cameraPos.add(vec2(-9, -12.5)), .7, false);
     font.drawText(`gfx: kenney.nl`, cameraPos.add(vec2(-9, -13.25)), .7, false);
     font.drawText(`music: @gruber_music`, cameraPos.add(vec2(-9, -14)), .7, false);
@@ -383,9 +381,6 @@ function gameRenderPost() {
   // pause
   let pos = vec2((G.width / 2) - 1.5, (G.height / 2) - 1.5);
   drawTile(pos, vec2(2), tile(88));
-  // let size = vec2(.5, 1.5)
-  // drawRect(pos, size, BLACK);
-  // drawRect(pos.add(vec2(1 ,0)), size, BLACK);
 
   // left pad the score with 0s, so we have 0001 etc
   let score = Math.floor(G.score).toString().padStart(4, '0')
@@ -408,9 +403,10 @@ function gameRenderPost() {
 
 
 function renderHiScore() {
-    const font = engineFontImage;
+  const font = engineFontImage;
   font.drawText('HI:'+G.hiScore, vec2(0,-10.1), 1.1, true, WHITE);
   font.drawText('HI:'+G.hiScore, vec2(0,-10), 1.1, true, BLACK);
+
 }
 
 class Player extends EngineObject {
@@ -564,7 +560,7 @@ class Tree extends EngineObject {
 
 class Treat extends EngineObject {
   constructor(game) {
-    let frame = [90].rnd();
+    let frame = [92].rnd();
     let x = game.width / 2;
     let y = game.height / 2;
 
@@ -618,8 +614,8 @@ class Treat extends EngineObject {
       let p = this.pos.add(vec2(this.off)).add(vec2(-1, 1));
       drawRect(p, vec2(.2), col);
       if (this.off >= .2) {
-        drawLine(p.add(vec2(-.6,0)), p.add(vec2(.6,0)), .2, col);
-        drawLine(p.add(vec2(0,-.6)), p.add(vec2(0,.6)), .2, col);
+        drawLine(p.add(vec2(-.6,0)), p.add(vec2(.6,0)), .2, col, undefined, time, true);
+        drawLine(p.add(vec2(0,-.6)), p.add(vec2(0,.6)), .2, col, undefined, time, true);
       }
   }
 }

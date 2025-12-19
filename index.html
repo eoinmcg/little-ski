@@ -6,6 +6,7 @@
 
 <link rel="manifest" href="manifest.json">
 
+<link rel="icon" type="image/x-icon" href="favicon.ico">
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,8 +17,6 @@
 <script src="public/js/p8-music.js"></script>
 <!-- Awesome collection of CC tunes: https://www.lexaloffle.com/bbs/?tid=29008-->
 <script src="public/js/tunes.js"></script>
-
-<link rel="icon" type="image/x-icon" href="favicon.ico">
 
 <script defer src="https://cloud.umami.is/script.js" data-website-id="6a7a59ee-cea7-4517-8aac-1aa3347fb5da"></script>
 <script src="sw.js"></script>
@@ -142,6 +141,55 @@ Array.prototype.rnd = function () {
   return this[Math.floor((Math.random()*this.length))];
 }
 
+const PATTERNS = [{
+    name: 'Slalom',
+    difficulty: 1,
+    objects: [
+      { type: 'Tree', pos: vec2(-5, 0) },
+      { type: 'Treat', pos: vec2(0, -2) },
+      { type: 'Tree', pos: vec2(5, -5) },
+      { type: 'Treat', pos: vec2(0, -7) },
+      { type: 'Tree', pos: vec2(-5, -10) }
+    ]
+  },
+  {
+    name: 'The Funnel A',
+    difficulty: 2,
+    objects: [
+      { type: 'Tree', pos: vec2(-8, 0) }, { type: 'Tree', pos: vec2(8, 0) },
+      { type: 'Tree', pos: vec2(-4, -4) }, { type: 'Tree', pos: vec2(4, -4) },
+      { type: 'Treat', pos: vec2(0, -6) },
+      { type: 'Tree', pos: vec2(2, -8) },
+    ]
+  },
+  {
+    name: 'The Funnel B',
+    difficulty: 2,
+    objects: [
+      { type: 'Tree', pos: vec2(-8, 0) }, { type: 'Tree', pos: vec2(8, 0) },
+      { type: 'Tree', pos: vec2(-4, -4) }, { type: 'Tree', pos: vec2(4, -4) },
+      { type: 'Treat', pos: vec2(0, -6) },
+      { type: 'Tree', pos: vec2(-2, -8) }
+    ]
+  },
+  {
+    name: 'The Tightest Funnel',
+    difficulty: 3,
+    objects: [
+      { type: 'Tree', pos: vec2(-8, 0) }, { type: 'Tree', pos: vec2(8, 0) },
+      { type: 'Tree', pos: vec2(-4, -4) }, { type: 'Tree', pos: vec2(4, -4) },
+      { type: 'Treat', pos: vec2(0, -6) },
+      { type: 'Tree', pos: vec2(-2, -8) }, { type: 'Tree', pos: vec2(2, -8) }
+    ]
+  },
+  {
+    name: 'Forest Clearing',
+    difficulty: 1,
+    objects: [
+      { type: 'Treat', pos: vec2(-3, 0) }, { type: 'Treat', pos: vec2(0, -2) }, { type: 'Treat', pos: vec2(3, 0) }
+    ]
+  }];
+
 let hiScore = 10;
 try {
   hiScore = window.localStorage.getItem('hiScore') || hiScore;
@@ -166,7 +214,7 @@ const G = {
   },
   sfx: {
     play: function(name, pos = false) {
-      if (!G.mute) {
+      if (!G.settings.mute) {
         G.sfx[name].play(pos);
       }
     },
@@ -177,8 +225,10 @@ const G = {
   hiScore: parseInt(hiScore, 10),
   plays: -1,
   splash: true,
-  fullscreen: false,
-  mute: false,
+  settings: {
+    fullscreen: false,
+    mute: false,
+  },
   shake: {
     time: 0,
     strength: .4,
@@ -186,7 +236,7 @@ const G = {
 }
 
 G.medals = [
-  new Medal(0, 'Hiscore', 'GOT A NEW HISCORE!', '🥇')
+  new Medal(0, 'NEW HISCORE', 'Totally gnarly, dude!', '🥇')
 ];
 
 if (window.location.hostname !== 'localhost') {
@@ -249,6 +299,7 @@ function startGame() {
 
   G.plays += 1;
   G.newHiscore = false;
+  G.patternManager = new PatternManager(G);
 
   medalsInit('little-ski');
   medalsForEach(medal=> medal.unlocked = false);
@@ -263,7 +314,7 @@ function startGame() {
       }
     }
   }
-  if (!G.mute) {
+  if (!G.settings.mute) {
     playTune(false, 10);
   }
   G.player = new Player(G);
@@ -271,11 +322,11 @@ function startGame() {
   G.newHiscore = false;
 
   new Treat(G);
-  new Tree(G);
+  new Tree(G, vec2(0, -10));
 }
 
 function playTune(tune = false, delay = 0) {
-  if (G.mute) { return; }
+  if (G.settings.mute) { return; }
   if (G.audio) { G.audio.stop(); }
   tune = tune || [14, 18, 24, 48].rnd();
   window.setTimeout(() => {
@@ -334,16 +385,16 @@ function hidePauseUI() {
   setInputPreventDefault(true);
   G.pauseUI.hidden = true;
   setPaused(false);
-  if (!G.audio || G.mute) return;
+  if (!G.audio || G.settings.mute) return;
   G.audio.playbackRate.value = 1;
 }
 
 function toggleMute() {
-  G.mute = !G.mute;
-  G.muteCheckbox.checked = G.mute;
+  G.settings.mute = !G.settings.mute;
+  G.muteCheckbox.checked = G.settings.mute;
   if (!G.audio) return;
-  if (G.mute) { G.audio.playbackRate.value = 0; return; }
-  if (!G.mute && !G.player.crashed) {
+  if (G.settings.mute) { G.audio.playbackRate.value = 0; return; }
+  if (!G.settings.mute && !G.player.crashed) {
     playTune();
     window.setTimeout(() => {
       G.audio.playbackRate.value = getPaused() ? 0 : 1;
@@ -361,13 +412,15 @@ function gameUpdate() {
     G.speed += G.score / 100000;
     G.speed = clamp(G.speed, 0.1, 0.3);
   }
-  G.nextSpawn += G.speed;
 
-  if (G.nextSpawn > 3) {
-    G.nextSpawn = 0;
-    if (Math.random() > .75) { new Tree(G); }
-    if (Math.random() > .95) { new Treat(G); }
-  }
+  G.patternManager.update();
+
+  // G.nextSpawn += G.speed;
+  // if (G.nextSpawn > 3) {
+  //   G.nextSpawn = 0;
+  //   if (Math.random() > .75) { new Tree(G); }
+  //   if (Math.random() > .95) { new Treat(G); }
+  // }
 
   if (G.score > G.hiScore && !G.newHiscore) {
     G.medals[0].unlock();
@@ -411,7 +464,6 @@ function gameUpdatePost() {
       hidePauseUI();
     }
   }
-
 
   let shakeOffset = vec2();
 
@@ -466,8 +518,12 @@ function gameRenderPost() {
     );
   });
 
+  const flash = Math.sin(new Date().getTime() * 0.005);
   if ((G.player && G.player.crashed)) {
     funkyText('GAME OVER', vec2(0,-3), 2, true, G);
+    if (G.newHiscore && flash > 0) {
+      drawText('NEW HISCORE!', vec2(0,-12), 1.5, YELLOW, .5, G.cols.medBlue, 'center', 'monospace', 'bold');
+    }
     renderHiScore();
   }
   if (getPaused()) {
@@ -602,13 +658,11 @@ class Player extends EngineObject {
 }
 
 class Tree extends EngineObject {
-  constructor(game) {
+  constructor(game, pos = null) {
     let x = game.width / 2;
-    let y = game.height / 2;
-
-    let pos = vec2(rand(-x, x), -y-2);
+    let startPos = pos || vec2(rand(-x, x), -game.height / 2 - 2);
     let frame = 30;
-    super(pos, vec2(.5), tile(frame, game.tileSize));
+    super(startPos, vec2(.5), tile(frame, game.tileSize));
 
     this.game = game;
     this.setCollision(true, false, false, false);
@@ -632,14 +686,14 @@ class Tree extends EngineObject {
 }
 
 class Treat extends EngineObject {
-  constructor(game) {
+  constructor(game, pos = null) {
     let t = 92; // 90: beer, 91: pizza, 93: donut
     let frame = [t].rnd();
     let x = game.width / 2;
     let y = game.height / 2;
 
-    let pos = vec2(rand(-x, x), -y-2);
-    super(pos, vec2(2), tile(frame, 16));
+    let startPos = pos || vec2(rand(-x, x), -y-2);
+    super(startPos, vec2(2), tile(frame, 16));
     this.game = game;
     this.frame = frame;
 
@@ -774,6 +828,40 @@ const particlesCollect = (pos, game) => {
   );
 }
 
+class PatternManager {
+  constructor(game) {
+    this.game = game;
+    this.distanceToNext = 0;
+  }
+
+  update() {
+    this.distanceToNext -= this.game.speed;
+
+    if (this.distanceToNext <= 0) {
+      this.spawnRandomPattern();
+      // Space between patterns decreases as speed/score increases
+      this.distanceToNext = max(10, 25 - (this.game.score / 50));
+    }
+  }
+
+  spawnRandomPattern() {
+    // Filter patterns by difficulty (optional: only show hard ones later)
+    const available = PATTERNS.filter(p => p.difficulty <= 1 + (this.game.score / 100));
+    const pattern = available.rnd();
+
+    pattern.objects.forEach(obj => {
+      // Offset the pattern so it spawns just below the screen
+      const spawnPos = vec2(obj.pos.x, -this.game.height / 2 + obj.pos.y - 5);
+      
+      if (obj.type === 'Tree') {
+        new Tree(this.game, spawnPos);
+      } else if (obj.type === 'Treat') {
+        new Treat(this.game, spawnPos);
+      }
+    });
+  }
+}
+
 /**
  *  Draws some funky text
  *  go crazy (if you want)
@@ -834,10 +922,10 @@ addEventListener("DOMContentLoaded", () => {
 
   const fullscreenCheckbox = G.modalDialog.querySelector('input[name="fullscreen"]');
   fullscreenCheckbox.addEventListener('change', e => {
-    G.fullscreen = e.target.checked;
+    G.settings.fullscreen = e.target.checked;
     const root = document.querySelector('#game-root');
 
-    if (G.fullscreen)
+    if (G.settings.fullscreen)
       root.requestFullscreen();
     else
       document.exitFullscreen();

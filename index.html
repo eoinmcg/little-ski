@@ -542,6 +542,8 @@ class Player extends EngineObject {
   constructor(game) {
     let size = 1.7;
     frame = Math.random() > .5 ? 70 : 82;
+    // frame = 76; //snowman
+    // frame = 76; // yeti
     super(
       vec2(0, 7),
       vec2(size),
@@ -667,6 +669,8 @@ class Tree extends EngineObject {
     this.game = game;
     this.setCollision(true, false, false, false);
     this.shadow = new Color(0,0,0,0.1);
+
+    this.drawSize = vec2(2);
   }
 
   update() {
@@ -681,7 +685,8 @@ class Tree extends EngineObject {
 
   render() {
     drawCircle(this.pos.add(vec2(0,-.5)), 2, this.shadow);
-    drawTile( this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize));
+    super.render();
+    // drawTile( this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize));
   }
 }
 

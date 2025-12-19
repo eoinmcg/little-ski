@@ -161,6 +161,7 @@ class Tree extends EngineObject {
 
     this.game = game;
     this.setCollision(true, false, false, false);
+    this.drawSize = vec2(2);
   }
 
   update() {
@@ -173,9 +174,6 @@ class Tree extends EngineObject {
     }
   }
 
-  render() {
-    drawTile( this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize)) 
-  }
 }
 </script>
 

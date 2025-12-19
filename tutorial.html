@@ -557,12 +557,16 @@ class Tree extends EngineObject {
 </code></pre>
 
         <p>Ok, but now the trees look tiny!</p>
-        <p>Let's override the Tree render method
-        and simply draw a bigger tree:</p>
+        <p>EngineObject has a drawSize property
+        which allows us to render the object bigger
+        (or smaller) than it's actual size. Add the final line
+        to the Tree's constructor method:</p>
 
 <pre><code class="language-javascript">
-  render() {
-    drawTile( this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize)) 
+class Tree extends EngineObject {
+  constructor(game) {
+    ...
+    this.drawSize = vec2(2); // &lt;- ADD THIS LINE
   }
 </code></pre>
 

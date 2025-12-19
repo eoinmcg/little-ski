@@ -225,6 +225,7 @@ class Tree extends EngineObject {
 
     this.game = game;
     this.setCollision(true, false, false, false);
+    this.drawSize = vec2(2);
   }
 
   update() {
@@ -235,10 +236,6 @@ class Tree extends EngineObject {
     if (this.pos.y > this.game.height / 2) {
       super.destroy();
     }
-  }
-
-  render() {
-    drawTile(this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize)) 
   }
 }
 

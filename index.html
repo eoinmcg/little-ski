@@ -211,7 +211,7 @@ try {
 const G = {
   width: 20, height: 30,
   tileSize: 16,
-  tiles: ['public/ski_tiles.png?v=1.2'],
+  tiles: ['public/ski_tiles.png?v=1.3'],
   cols: {
     white: new Color().setHex('#ffffff'),
     red: new Color().setHex('#ff004d'),
@@ -514,6 +514,7 @@ function gameRenderPost() {
     drawText(`code: eoinmcg`, cameraPos.add(vec2(x, y)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
     drawText(`gfx: kenney.nl`, cameraPos.add(vec2(x, y-1)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
     drawText(`music: @gruber_music`, cameraPos.add(vec2(x, y-2)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
+    drawText(`v.1.3`, cameraPos.add(vec2(-9.5, y-2)), size, new Color(1,1,1,0.5), 0, WHITE, 'left', 'monospace', 'bold');
     return;
   }
 
@@ -874,8 +875,8 @@ constructor(game) {
         while (burstSize-- > 0 && this.spawnQueue.length > 0) {
           this.spawnQueue.shift()();
         }
-        // Wait 5 frames before the next burst
-        this.burstTimer = 5; 
+        // Wait 30 frames before the next burst
+        this.burstTimer = 30;
       } else {
         this.burstTimer--;
       }

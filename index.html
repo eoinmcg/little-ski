@@ -68,9 +68,7 @@ html ,body { background: #333; }
   transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-#pause-ui[hidden] #pause-panel {
-  top: -100%;
-}
+#pause-ui[hidden] #pause-panel { top: -100%; }
 #pause-panel {
   font-size: clamp(18px, 2.5vw, 20px);
   min-width: 280px;
@@ -87,7 +85,7 @@ html ,body { background: #333; }
 }
 #pause-panel label.clear-scores { padding-left: 2rem; width: 90%; }
 #pause-panel label:hover {
-  text-shadow: 1px 1px 2px orange;
+  text-shadow: none;
   cursor: pointer;
   background: yellow;
   color: black;
@@ -125,7 +123,6 @@ html ,body { background: #333; }
   color: #fff;
 }
 </style>
-
 </head>
 <body>
 
@@ -177,7 +174,7 @@ const PATTERNS = [{
     difficulty: 3,
     objects: [
       { type: 'Tree', pos: vec2(-8, 0) }, { type: 'Tree', pos: vec2(8, 0) },
-      { type: 'Tree', pos: vec2(-4, -4) }, { type: 'Tree', pos: vec2(4, -4) },
+      // { type: 'Tree', pos: vec2(-4, -4) }, { type: 'Tree', pos: vec2(4, -4) },
       { type: 'Treat', pos: vec2(0, -6) },
       { type: 'Tree', pos: vec2(-2, -8) }, { type: 'Tree', pos: vec2(2, -8) }
     ]
@@ -188,7 +185,23 @@ const PATTERNS = [{
     objects: [
       { type: 'Treat', pos: vec2(-3, 0) }, { type: 'Treat', pos: vec2(0, -2) }, { type: 'Treat', pos: vec2(3, 0) }
     ]
-  }];
+  },
+  {
+    name: 'Expert Slalom',
+    difficulty: 2,
+    objects: [
+      { type: 'Tree', pos: vec2(-6, 0) },   // Left pivot
+      { type: 'Treat', pos: vec2(0, -2) },  // Guidance treat in center
+      { type: 'Tree', pos: vec2(6, -6) },    // Right pivot
+      { type: 'Treat', pos: vec2(0, -8) },  // Guidance treat in center
+      { type: 'Tree', pos: vec2(-6, -12) },  // Left pivot
+      { type: 'Treat', pos: vec2(0, -14) }, // Guidance treat in center
+      { type: 'Tree', pos: vec2(6, -18) }    // Right pivot
+    ]
+  },
+];
+// Let the js engine know this won't change
+Object.freeze(PATTERNS);
 
 let hiScore = 10;
 try {
@@ -198,7 +211,7 @@ try {
 const G = {
   width: 20, height: 30,
   tileSize: 16,
-  tiles: ['public/ski_tiles.png', 'public/title.png'],
+  tiles: ['public/ski_tiles.png?v=1.2'],
   cols: {
     white: new Color().setHex('#ffffff'),
     red: new Color().setHex('#ff004d'),
@@ -336,6 +349,10 @@ function playTune(tune = false, delay = 0) {
 
 function splashUpdate() {
   if (mouseWasReleased(0) || keyWasReleased('Space')) {
+      if (window.navigator.standalone === true) {
+      const root = document.querySelector('#game-root');
+        root.requestFullscreen();
+      }
       startGame();
   }
 }
@@ -607,7 +624,7 @@ class Player extends EngineObject {
     // remove any entries that are now off screen
     this.trail = this.trail.filter(t => {
         t.pos.y += this.game.speed;
-        return t.pos.y <= this.game.height; 
+        return t.pos.y <= this.game.height;
     });
   }
 
@@ -654,6 +671,7 @@ class Player extends EngineObject {
     this.angle = 0;
     this.frame = 94;
     this.crashed = time;
+    o.destroy();
     playTune(36, 1000);
     addSnow();
   }
@@ -686,13 +704,12 @@ class Tree extends EngineObject {
   render() {
     drawCircle(this.pos.add(vec2(0,-.5)), 2, this.shadow);
     super.render();
-    // drawTile( this.pos.add(vec2(0,.5)), vec2(2), tile(30, G.tileSize));
   }
 }
 
 class Treat extends EngineObject {
   constructor(game, pos = null) {
-    let t = 92; // 90: beer, 91: pizza, 93: donut
+    let t = 92; // 90: beer, 91: pizza, 92: donut, 93: ice-cream
     let frame = [t].rnd();
     let x = game.width / 2;
     let y = game.height / 2;
@@ -834,35 +851,47 @@ const particlesCollect = (pos, game) => {
 }
 
 class PatternManager {
-  constructor(game) {
+constructor(game) {
     this.game = game;
     this.distanceToNext = 0;
+    this.spawnQueue = [];
+    this.burstTimer = 0;
   }
 
   update() {
     this.distanceToNext -= this.game.speed;
-
     if (this.distanceToNext <= 0) {
-      this.spawnRandomPattern();
-      // Space between patterns decreases as speed/score increases
-      this.distanceToNext = max(10, 25 - (this.game.score / 50));
+      this.enqueuePattern();
+      // Increase the distance between pattern starts to ensure the queue can clear
+      this.distanceToNext = Math.max(15, 30 - (this.game.score / 40));
+    }
+
+    // Spaced Burst Logic
+    if (this.spawnQueue.length > 0) {
+      if (this.burstTimer <= 0) {
+        // Process a small cluster (e.g., 3 objects) then wait
+        let burstSize = 3; 
+        while (burstSize-- > 0 && this.spawnQueue.length > 0) {
+          this.spawnQueue.shift()();
+        }
+        // Wait 5 frames before the next burst
+        this.burstTimer = 5; 
+      } else {
+        this.burstTimer--;
+      }
     }
   }
 
-  spawnRandomPattern() {
-    // Filter patterns by difficulty (optional: only show hard ones later)
+  enqueuePattern() {
     const available = PATTERNS.filter(p => p.difficulty <= 1 + (this.game.score / 100));
     const pattern = available.rnd();
 
     pattern.objects.forEach(obj => {
-      // Offset the pattern so it spawns just below the screen
       const spawnPos = vec2(obj.pos.x, -this.game.height / 2 + obj.pos.y - 5);
-      
-      if (obj.type === 'Tree') {
-        new Tree(this.game, spawnPos);
-      } else if (obj.type === 'Treat') {
-        new Treat(this.game, spawnPos);
-      }
+      this.spawnQueue.push(() => {
+        if (obj.type === 'Tree') new Tree(this.game, spawnPos);
+        else if (obj.type === 'Treat') new Treat(this.game, spawnPos);
+      });
     });
   }
 }
@@ -1033,10 +1062,8 @@ addEventListener("DOMContentLoaded", () => {
             <li>Scroll down and tap <b>Add to Home Screen</b></li>
         </ol>
     </div>
-
     </div>
   </div>
 </div>
-
 </body>
 </html>

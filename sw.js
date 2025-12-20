@@ -1,4 +1,4 @@
-const cacheName = 'ski-v1';
+const cacheName = 'ski-v1.1';
 
 const assets = [
   './',
@@ -6,7 +6,7 @@ const assets = [
   './favicon.ico',
   'public/js/p8-music.js',
   'public/js/tunes.js',
-  'public/ski_tiles.png',
+  'public/ski_tiles.png?v=1.2',
   'public/js/littlejs.min.js',
 ];
 

@@ -6,7 +6,7 @@ const assets = [
   './favicon.ico',
   'public/js/p8-music.js',
   'public/js/tunes.js',
-  'public/ski_tiles.png?v=1.3',
+  'public/ski_tiles.png?v=1.4',
   'public/js/littlejs.min.js',
 ];
 

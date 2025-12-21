@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes" />
 
-<script src="public/js/littlejs.min.js"></script>
+<script src="public/js/littlejs.js"></script>
 <!-- Play pico-8 tunes in js: https://github.com/codyebberson/pico8-music -->
 <script src="public/js/p8-music.js"></script>
 <!-- Awesome collection of CC tunes: https://www.lexaloffle.com/bbs/?tid=29008-->
@@ -211,7 +211,7 @@ try {
 const G = {
   width: 20, height: 30,
   tileSize: 16,
-  tiles: ['public/ski_tiles.png?v=1.3'],
+  tiles: ['public/ski_tiles.png?v=1.4'],
   cols: {
     white: new Color().setHex('#ffffff'),
     red: new Color().setHex('#ff004d'),
@@ -256,6 +256,7 @@ if (window.location.hostname !== 'localhost') {
   setShowSplashScreen(true);
   setDebugWatermark(false);
 }
+  setDebugWatermark(false);
 
 G.tunes = new P8(Tunes.i, Tunes.m);
 
@@ -271,6 +272,8 @@ function gameInit() {
 
   checkIOSInstall();
   addSnow();
+
+  G.patternManager = new PatternManager(G);
 
 }
 
@@ -312,7 +315,7 @@ function startGame() {
 
   G.plays += 1;
   G.newHiscore = false;
-  G.patternManager = new PatternManager(G);
+  G.patternManager.reset();
 
   medalsInit('little-ski');
   medalsForEach(medal=> medal.unlocked = false);
@@ -514,7 +517,7 @@ function gameRenderPost() {
     drawText(`code: eoinmcg`, cameraPos.add(vec2(x, y)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
     drawText(`gfx: kenney.nl`, cameraPos.add(vec2(x, y-1)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
     drawText(`music: @gruber_music`, cameraPos.add(vec2(x, y-2)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
-    drawText(`v.1.3`, cameraPos.add(vec2(-9.5, y-2)), size, new Color(1,1,1,0.5), 0, WHITE, 'left', 'monospace', 'bold');
+    drawText(`v.1.4`, cameraPos.add(vec2(-9.5, y-2)), size, new Color(1,1,1,0.5), 0, WHITE, 'left', 'monospace', 'bold');
     return;
   }
 
@@ -894,6 +897,11 @@ constructor(game) {
         else if (obj.type === 'Treat') new Treat(this.game, spawnPos);
       });
     });
+  }
+
+  reset() {
+    this.spawnQueue = [];
+    this.distanceToNext = 0;
   }
 }
 

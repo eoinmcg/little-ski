@@ -203,7 +203,7 @@ const PATTERNS = [{
 // Let the js engine know this won't change
 Object.freeze(PATTERNS);
 
-let hiScore = 10;
+let hiScore = 100;
 try {
   hiScore = window.localStorage.getItem('hiScore') || hiScore;
 } catch (e) {}
@@ -211,7 +211,7 @@ try {
 const G = {
   width: 20, height: 30,
   tileSize: 16,
-  tiles: ['public/ski_tiles.png?v=1.4'],
+  tiles: ['public/ski_tiles.png?v=1.5'],
   cols: {
     white: new Color().setHex('#ffffff'),
     red: new Color().setHex('#ff004d'),
@@ -248,6 +248,8 @@ const G = {
   },
 }
 
+G.audioCache = new Map();
+
 G.medals = [
   new Medal(0, 'NEW HISCORE', 'Totally gnarly, dude!', '🥇')
 ];
@@ -270,8 +272,30 @@ function gameInit() {
   setCanvasPixelated(true);
   setTileDefaultBleed(.5);
 
+  setTimeout(() => {
+      const status = document.getElementById('loading-status');
+      
+      // 3. Heavy Task: Pre-warm objects
+      if (status) status.innerText = "Sharpening skis...";
+      preWarmPool(G);
+
+      // 4. Heavy Task: Pre-cache music
+      if (status) status.innerText = "Tuning the radio...";
+      preCacheMusic();
+
+      // 5. Done! Hide the loader and show the splash
+      const loader = document.getElementById('loading-overlay');
+      if (loader) loader.style.display = 'none';
+      
+      // Trigger the first frame of the game
+      G.initialized = true; 
+    }, 100); // 100ms is enough for the browser to paint the UI
+
   checkIOSInstall();
   addSnow();
+
+  preWarmPool(G);
+  preCacheMusic();
 
   G.patternManager = new PatternManager(G);
 
@@ -305,9 +329,58 @@ function removeSnow() {
   }
 }
 
+function resetGameObjects() {
+  engineObjects.forEach(obj => {
+    if (obj instanceof Tree || obj instanceof Treat) {
+      Pool.recycle(obj);
+    } else {
+      obj.destroy();
+    }
+  });
+}
+
+function preCacheMusic() {
+  console.log('Pre-rendering music tracks...');
+  const tracksToCache = [14, 18, 24, 48, 36]; 
+
+  tracksToCache.forEach(tuneId => {
+    // 1. Trigger the music generation
+    const musicInstance = G.tunes.music(tuneId);
+
+    // 2. Immediately stop it.
+    // This forces the library to parse the pattern and channel data
+    // into memory without actually making sound.
+    musicInstance.stop();
+
+    // 3. Store the instance if you want to reuse it,
+    // though pico8-music usually expects a fresh call.
+    G.audioCache.set(tuneId, true);
+  });
+  console.log('Music metadata cached.');
+}
+
+function preWarmPool(game) {
+  const TREE_COUNT = 30;
+  const TREAT_COUNT = 10;
+
+  // Create trees and immediately put them in the pool
+  for (let i = 0; i < TREE_COUNT; i++) {
+    // We spawn them far off-screen so they don't flash for a frame
+    const t = new Tree(game, vec2(-1000, -1000));
+    Pool.recycle(t);
+  }
+
+  // Create treats and immediately put them in the pool
+  for (let i = 0; i < TREAT_COUNT; i++) {
+    const tr = new Treat(game, vec2(-1000, -1000));
+    Pool.recycle(tr);
+  }
+
+}
+
 function startGame() {
   inputClear();
-  engineObjectsDestroy();   // remove all engine objects
+  resetGameObjects();
 
   G.speed = 0.1;
   G.score = 0;
@@ -319,6 +392,11 @@ function startGame() {
 
   medalsInit('little-ski');
   medalsForEach(medal=> medal.unlocked = false);
+
+  // Ensure the audio context is active before playing
+  if (G.tunes.context && G.tunes.context.state === 'suspended') {
+    G.tunes.context.resume();
+  }
 
   // background
   let halfH = G.height / 2;
@@ -342,11 +420,23 @@ function startGame() {
 }
 
 function playTune(tune = false, delay = 0) {
-  if (G.settings.mute) { return; }
-  if (G.audio) { G.audio.stop(); }
-  tune = tune || [14, 18, 24, 48].rnd();
+  if (G.mute) { return; }
+  
+  // Stop current audio
+  if (G.audio) { 
+    try { G.audio.stop(); } catch(e) {} 
+  }
+
+  const tuneId = tune || [14, 18, 24, 48].rnd();
+  
   window.setTimeout(() => {
-    G.audio = G.tunes.music(tune);
+    // Now that it's pre-warmed, this call will be much faster
+    G.audio = G.tunes.music(tuneId);
+    
+    // Safety check: if the user muted while the timeout was waiting
+    if (G.mute && G.audio) {
+      G.audio.stop();
+    }
   }, delay);
 }
 
@@ -517,7 +607,7 @@ function gameRenderPost() {
     drawText(`code: eoinmcg`, cameraPos.add(vec2(x, y)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
     drawText(`gfx: kenney.nl`, cameraPos.add(vec2(x, y-1)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
     drawText(`music: @gruber_music`, cameraPos.add(vec2(x, y-2)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
-    drawText(`v.1.4`, cameraPos.add(vec2(-9.5, y-2)), size, new Color(1,1,1,0.5), 0, WHITE, 'left', 'monospace', 'bold');
+    drawText(`v.1.5`, cameraPos.add(vec2(-9.5, y-2)), size, new Color(1,1,1,0.5), 0, WHITE, 'left', 'monospace', 'bold');
     return;
   }
 
@@ -693,19 +783,23 @@ class Tree extends EngineObject {
     this.shadow = new Color(0,0,0,0.1);
 
     this.drawSize = vec2(2);
+    this.renderOrder = 1;
   }
 
   update() {
+    if (this.dead) return;
     super.update();
     this.pos.y += this.game.speed;
 
     // remove object when past top of screen
     if (this.pos.y > this.game.height / 2) {
-      super.destroy();
+      // super.destroy();
+      Pool.recycle(this);
     }
   }
 
   render() {
+    if (this.dead) return;
     drawCircle(this.pos.add(vec2(0,-.5)), 2, this.shadow);
     super.render();
   }
@@ -725,17 +819,20 @@ class Treat extends EngineObject {
 
     this.off = vec2();
     this.glimmerSpeed = 5; // (higher = faster)
+    this.renderOrder = 1;
 
     this.setCollision(true, false, false, false);
   }
 
   update() {
+    if (this.dead) return;
     this.wave = Math.abs(Math.sin(new Date().getTime() * 0.0005));
     this.updateGlimmer();
     super.update();
     this.pos.y += this.game.speed;
     if (this.pos.y > this.game.height / 2) {
-      this.destroy();
+      // this.destroy();
+      Pool.recycle(this);
     }
   }
 
@@ -752,6 +849,7 @@ class Treat extends EngineObject {
   }
 
   render() {
+    if (this.dead) return;
     // shadow
     drawCircle(this.pos.add(vec2(0,-.5)), 1.5-(this.wave/2), this.shadow);
     // image
@@ -794,7 +892,7 @@ class Snow extends EngineObject {
     let y = game.height / 2;
     super(vec2(rand(-x, x), rand(-y, y)),
       vec2(rand(.25,1.5)), tile(84, game.tileSize))
-    this.renderOrder = 0;
+    this.renderOrder = 10;
     this.game = game;
     this.speed = this.size.x / 20;
     this.startX = this.pos.x
@@ -854,6 +952,37 @@ const particlesCollect = (pos, game) => {
   );
 }
 
+const Pool = {
+  trees: [],
+  treats: [],
+
+  // Get an object from the pool or create a new one if empty
+  obtain(type, game, pos) {
+    let obj;
+    if (type === 'Tree') {
+      obj = this.trees.pop() || new Tree(game, pos);
+    } else {
+      obj = this.treats.pop() || new Treat(game, pos);
+    }
+
+    // Reset properties for the "new" life
+    obj.pos = pos.copy();
+    obj.dead = false;
+    obj.setCollision(true, false);
+    return obj;
+  },
+
+  // Put an object back into the pool instead of destroying it
+  recycle(obj) {
+    obj.dead = true;
+    obj.pos = vec2(-100, -100); // Move off-screen
+    obj.setCollision(false, false);
+    
+    if (obj instanceof Tree) this.trees.push(obj);
+    else if (obj instanceof Treat) this.treats.push(obj);
+  }
+};
+
 class PatternManager {
 constructor(game) {
     this.game = game;
@@ -893,8 +1022,9 @@ constructor(game) {
     pattern.objects.forEach(obj => {
       const spawnPos = vec2(obj.pos.x, -this.game.height / 2 + obj.pos.y - 5);
       this.spawnQueue.push(() => {
-        if (obj.type === 'Tree') new Tree(this.game, spawnPos);
-        else if (obj.type === 'Treat') new Treat(this.game, spawnPos);
+        Pool.obtain(obj.type, this.game, spawnPos);
+        // if (obj.type === 'Tree') new Tree(this.game, spawnPos);
+        // else if (obj.type === 'Treat') new Treat(this.game, spawnPos);
       });
     });
   }
@@ -979,7 +1109,7 @@ addEventListener("DOMContentLoaded", () => {
     G.sfx.play('hit');
     try {
       window.localStorage.clear();
-      G.hiScore = 10;
+      G.hiScore = 100;
       G.newHiscore = false;
     } catch(e) { }
   });
@@ -1043,6 +1173,10 @@ addEventListener("DOMContentLoaded", () => {
 </script>
 
 <div id="game-root">
+<div id="loading-overlay" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1b2632; color: #fff; font-family: monospace; z-index: 1000;">
+    <div style="font-size: 24px; margin-bottom: 10px;">Loading</div>
+    <div id="loading-status">just a sec...</div>
+</div>
   <div id="pause-ui" hidden>
     <div id="pause-backdrop"></div>
     <div id="pause-panel">

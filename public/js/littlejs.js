@@ -8,18 +8,20 @@
  * MIT License - Copyright 2021 Frank Force
  *
  * Engine Features
- * - Object oriented system with base class engine object
- * - Base class object handles update, physics, collision, rendering, etc
- * - Engine helper classes and functions like Vector2, Color, and Timer
- * - Super fast rendering system for tile sheets
- * - Sound effects audio with zzfx and music with zzfxm
- * - Input processing system with gamepad and touchscreen support
- * - Tile layer rendering and collision system
- * - Particle effect system
- * - Medal system tracks and displays achievements
- * - Debug tools and debug rendering system
- * - Post processing effects
- * - Call engineInit() to start it up!
+ * - Object oriented system with EngineObject base class
+ * - Automatic object lifecycle (update, physics, collision, rendering)
+ * - Engine helper classes: Vector2, Color, Timer, RandomGenerator
+ * - Hybrid rendering with WebGL batching and Canvas2D fallback
+ * - Audio system with wave, mp3, or ZzFX sound effects
+ * - Input system with keyboard, mouse, gamepad, and touch support
+ * - Tile layer rendering and collision detection
+ * - Particle effect system with emitters
+ * - Medal/achievement system with local storage
+ * - Comprehensive debug tools and visualizations
+ * - Fixed 60 FPS timestep with configurable time scale
+ * - Raycast and spatial query utilities
+ * - Plugin system for extending engine functionality
+ * - Start with engineInit() and provide your game callbacks
  * @namespace Engine
  */
 
@@ -33,7 +35,7 @@ const engineName = 'LittleJS';
  *  @type {string}
  *  @default
  *  @memberof Engine */
-const engineVersion = '1.17.11';
+const engineVersion = '1.17.13';
 
 /** Frames per second to update
  *  @type {number}
@@ -685,11 +687,14 @@ function drawEngineLogo(t)
 }
 /**
  * LittleJS Debug System
- * - Press Esc to show debug overlay with mouse pick
- * - Number keys toggle debug functions
- * - +/- apply time scale
- * - Debug primitive rendering
- * - Save a 2d canvas as a png image
+ * - Press Esc to toggle debug overlay with object picking
+ * - Number keys toggle debug visualizations (physics, particles, etc.)
+ * - +/- keys control time scale for slow motion/fast forward
+ * - ASSERT and LOG macros for development (removed in release builds)
+ * - Debug primitive rendering (rectangles, circles, lines, points, text)
+ * - Screenshot and video capture support
+ * - FPS counter and performance watermark
+ * - Debug overlay shows mouse position and picked objects
  * @namespace Debug
  */
 
@@ -1404,10 +1409,17 @@ function debugProtectConstant(obj)
 }
 /**
  * LittleJS Math Classes and Functions
- * - General purpose math library
- * - RandomGenerator - seeded random number generator
- * - Vector2 - fast, simple, easy 2D vector class
- * - Color - holds a rgba color with math functions
+ * - Comprehensive math utilities for game development
+ * - Vector2 class for 2D positions, directions, and math operations
+ * - Color class for RGBA colors with interpolation and manipulation
+ * - RandomGenerator for seeded pseudo-random number generation
+ * - Math shortcuts (PI, abs, floor, ceil, min, max, sin, cos, etc.)
+ * - Interpolation functions (lerp, smoothStep, percent)
+ * - Clamping, wrapping, and modulo operations
+ * - Angle utilities with wrap-around support
+ * - Collision detection (overlapping, intersection, line tests)
+ * - Random number generation and seeding
+ * - Type checking utilities
  * @namespace Math
  */
 
@@ -2142,6 +2154,15 @@ class Vector2
      * @return {Vector2} */
     floor() { return new Vector2(floor(this.x), floor(this.y)); }
 
+    /** Returns a copy of this vector snapped to a grid
+     *  @param {number} grid - grid size to snap to
+     *  @return {Vector2} */
+    snap(grid)
+    {
+        ASSERT_NUMBER_VALID(grid);
+        return new Vector2(floor(this.x*grid)/grid, floor(this.y*grid)/grid);
+    }
+
     /** Returns new vec2 with modded values
     *  @param {number} [divisor]
     *  @return {Vector2} */
@@ -2516,8 +2537,12 @@ const PURPLE = debugProtectConstant(rgb(.5,0,1));
 const MAGENTA = debugProtectConstant(rgb(1,0,1));
 /**
  * LittleJS Utility Classes and Functions
- * - General purpose utilities
- * - Timer - tracks time automatically
+ * - Timer - tracks time automatically with support for pause and real-time modes
+ * - Time formatting helper
+ * - JSON file fetching
+ * - File saving (text, canvas, data URLs)
+ * - Native share dialog support
+ * - Local storage save data management
  * @namespace Utilities
  */
 
@@ -3310,6 +3335,13 @@ function setDebugWatermark(show) { debugWatermark = show; }
 function setDebugKey(key) { debugKey = key; }
 /**
  * LittleJS Object System
+ * - EngineObject is the base class for all game objects
+ * - Handles automatic updating, rendering, physics, and collision
+ * - Supports parent-child hierarchies with transform inheritance
+ * - 2D physics with velocity, acceleration, damping, and gravity
+ * - Collision system with tiles and other objects
+ * - Renders sprites from tile sheets with color and rotation
+ * - Objects sorted by renderOrder for layered rendering
  */
 
 /**
@@ -3822,33 +3854,38 @@ class EngineObject
     {
         if (!debug) return;
 
+        // check if there is anything to show
+        const hasPhysics = this.collideTiles || this.collideSolidObjects || this.isSolid;
+        if (!hasPhysics && !this.parent) return;
+
         // show object info for debugging
         const size = vec2(max(this.size.x, .2), max(this.size.y, .2));
         const color = rgb(this.collideTiles?1:0, this.collideSolidObjects?1:0, this.isSolid?1:0, .5);
-        drawRect(this.pos, size, color, this.angle);
+        debugRect(this.pos, size, color, 0, this.angle, hasPhysics);
         if (this.parent)
-            drawRect(this.pos, size.scale(.8), rgb(1,1,1,.5), this.angle);
-        this.parent && drawLine(this.pos, this.parent.pos, .1, rgb(1,1,1,.5));
+            debugRect(this.pos, size.scale(.8), rgb(1,1,1,.5), 0, this.angle);
+        this.parent && debugLine(this.pos, this.parent.pos, rgb(1,1,1,.5), .5);
     }
 }
 /**
  * LittleJS Drawing System
- * - Hybrid system with both Canvas2D and WebGL available
- * - Super fast tile sheet rendering with WebGL
- * - Can apply rotation, mirror, color and additive color
- * - Font rendering system with built in engine font
- * - Many useful utility functions
+ * - Hybrid rendering with both Canvas2D and WebGL support
+ * - Optimized tile sheet sprite rendering using WebGL batching
+ * - Primitive drawing for polygons, ellipses, and lines
+ * - Tile-based rendering with TileInfo and TextureInfo classes
+ * - Text rendering with custom fonts and FontImage support
+ * - Color and additive color blending for effects
+ * - Rotation, mirroring, and scaling transformations
+ * - Camera system with position, scale, and rotation
+ * - Multiple canvas support (main, WebGL, work canvases)
+ * - Gradient fills and outlined shapes
+ * - Image manipulation and color tinting
  *
- * LittleJS uses a hybrid rendering solution with the best of both Canvas2D and WebGL.
- * There are 3 canvas/contexts available to draw to...
- * mainCanvas - 2D background canvas, non WebGL stuff like tile layers are drawn here.
- * glCanvas - Used by the accelerated WebGL batch rendering system.
+ * Rendering Architecture:
+ * - glCanvas: WebGL canvas for accelerated sprite batch rendering
+ * - mainCanvas: Canvas2D overlay for text, UI, and custom drawing
+ * - All draw functions default to WebGL when enabled, can force Canvas2D with useWebGL parameter
  *
- * The WebGL rendering system is very fast with some caveats...
- * - Switching blend modes (additive) or textures causes another draw call which is expensive in excess
- * - Group additive rendering together using renderOrder to mitigate this issue
- *
- * The LittleJS rendering solution is intentionally simple, feel free to adjust it for your needs!
  * @namespace Draw
  */
 
@@ -4982,11 +5019,14 @@ async function fontImageInit()
 }
 /**
  * LittleJS Input System
- * - Tracks keyboard down, pressed, and released
- * - Tracks mouse buttons, position, and wheel
- * - Tracks multiple analog gamepads
- * - Touch input is handled as mouse input
- * - Virtual gamepad for touch devices
+ * - Keyboard input with key down, pressed, and released states
+ * - Mouse input with position (world and screen space), buttons, and wheel
+ * - Gamepad support for multiple controllers with analog sticks and buttons
+ * - Touch input mapped to mouse position and buttons
+ * - Virtual on-screen gamepad for mobile devices
+ * - Automatic gamepad vs keyboard/mouse detection
+ * - Input event prevention for canvas focus
+ * - Clipboard copy/paste support
  * @namespace Input
  */
 
@@ -5316,7 +5356,19 @@ function inputInit()
                 inputData[0][remapKey(e.code)] = 3;
         }
 
-        // prevent arrow key from moving the page
+        // try to prevent default browser handling of input
+        if (!inputPreventDefault || !document.hasFocus() || !e.cancelable) return;
+
+        // don't break browser shortcuts
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+        // don't interfere with user typing into UI fields
+        if (isTextInput(e.target) || isTextInput(document.activeElement)) return;
+
+        // fix browser setting "Search for text when you start typing"
+        const printable = typeof e.key === 'string' && e.key.length === 1;
+
+        // prevent arrow key and other default keys from messing with stuff
         const preventDefaultKeys = 
         [
             'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', // scrolling
@@ -5324,9 +5376,15 @@ function inputInit()
             'Tab',          // focus navigation
             'Backspace',    // browser back
         ];
-        if (preventDefaultKeys.includes(e.code))
-        if (inputPreventDefault && document.hasFocus() && e.cancelable)
+        if (preventDefaultKeys.includes(e.code) || printable)
             e.preventDefault();
+                    
+        function isTextInput(element)
+        {
+            const tag = element?.tagName;
+            const editable = element?.isContentEditable;
+            return editable || ['INPUT','TEXTAREA','SELECT'].includes(tag);
+        }
     }
     function onKeyUp(e)
     {
@@ -5759,12 +5817,15 @@ function touchGamepadButtonCenter()
 }
 /**
  * LittleJS Audio System
- * - <a href=https://killedbyapixel.github.io/ZzFX/>ZzFX Sound Effects</a> - ZzFX Sound Effect Generator
- * - <a href=https://keithclark.github.io/ZzFXM/>ZzFXM Music</a> - ZzFXM Music System
- * - Caches sounds and music for fast playback
- * - Can attenuate and apply stereo panning to sounds
- * - Ability to play mp3, ogg, and wave files
- * - Speech synthesis functions
+ * - Play audio files (mp3, ogg, wave) and generate sounds with ZzFX
+ * - ZzFX sound generator integration: <a href=https://killedbyapixel.github.io/ZzFX/>ZzFX</a>
+ * - Sound caching for fast playback and memory efficiency
+ * - Volume control with attenuation and stereo panning
+ * - 2D spatial audio based on camera position with distance-based falloff
+ * - Sound instance management (pause, resume, stop)
+ * - Speech synthesis for text-to-speech
+ * - Music playback with ZzFXM support
+ * - Web Audio API integration with master gain control
  * @namespace Audio
  */
 
@@ -6433,10 +6494,14 @@ function zzfxG
 }
 /**
  * LittleJS Tile Layer System
- * - Caches arrays of tiles to off screen canvas for fast rendering
- * - Unlimited numbers of layers, allocates canvases as needed
- * - Tile layers can be drawn to using their context with canvas2d
- * - Tile layers can also have collision with EngineObjects
+ * - Renders large tile-based levels efficiently using cached canvases
+ * - Unlimited tile layers with automatic canvas allocation
+ * - Layers support both rendering and collision detection
+ * - Direct canvas2d drawing access for custom tile rendering
+ * - TileLayer for rendering, TileCollisionLayer for physics
+ * - Collision callbacks for tile interactions with objects
+ * - Optimized raycast support for tile-based physics
+ * - Integration with Box2D physics via Box2DTileLayer plugin
  * @namespace TileLayers
  */
 
@@ -7141,9 +7206,14 @@ class TileCollisionLayer extends TileLayer
 }
 /**
  * LittleJS Particle System
- * - A simple but fast and flexible particle system
- * - Lightweight Particles are created and managed by ParticleEmitters
- * - The particle design tool can be used to help create emitters
+ * - Fast and flexible particle effects system
+ * - ParticleEmitter spawns and manages lightweight Particle objects
+ * - Particles support color gradients, fading, rotation, and scaling
+ * - Physics simulation with velocity, gravity, and damping
+ * - Collision detection with tile layers
+ * - Additive blending for glowing effects
+ * - Cone-based emission with randomization
+ * - Particle design tool available for easy emitter creation
  * @namespace Particles
  */
 
@@ -7662,9 +7732,12 @@ class Particle
 }
 /**
  * LittleJS Medal System
- * - Tracks and displays medals
- * - Saves medals to local storage
- * - Newgrounds integration
+ * - Achievement/trophy system for games
+ * - Medal class with name, description, icon, and unlock tracking
+ * - Automatic saving to local storage
+ * - Visual display queue with slide-in notifications
+ * - Newgrounds API integration for online achievements
+ * - Debug mode to unlock/reset medals during development
  * @namespace Medals
  */
 
@@ -7853,14 +7926,17 @@ class Medal
 }
 /**
  * LittleJS WebGL Interface
- * - All WebGL used by the engine is wrapped up here
- * - Will fall back to 2D canvas rendering if WebGL is not supported
- * - For normal stuff you won't need to see or call anything in this file
- * - For advanced stuff there are helper functions to create shaders, textures, etc
- * - Can be disabled with glEnable to revert to 2D canvas rendering
- * - Batches sprite rendering on GPU for incredibly fast performance
- * - Sprite transform math is done in the shader where possible
- * - Supports shadertoy style post processing shaders via plugin
+ * - WebGL2 rendering engine for high-performance graphics
+ * - Batched sprite rendering for drawing thousands of sprites efficiently
+ * - Instanced rendering using vertex array objects (VAOs)
+ * - Polygon rendering with triangle strip support
+ * - Shader system with custom vertex and fragment shaders
+ * - Texture management with automatic atlas support
+ * - Post-processing effects via framebuffer and shader plugins
+ * - Automatic fallback to Canvas2D if WebGL is unavailable
+ * - Context loss and restoration handling
+ * - Can be disabled with glEnable setting
+ * - Advanced users can create custom shaders and render targets
  * @namespace WebGL
  */
 
@@ -9351,8 +9427,15 @@ class UISystemPlugin
         this.lastHoverObject = undefined;
         /** @property {UIObject} - Current confirm menu being shown */
         this.confirmDialog = undefined;
+        /** @property {UIObject} - Object to send keyboard input to */
+        this.keyInputObject = undefined;
 
         engineAddPlugin(uiUpdate, uiRender);
+
+        // key down handler
+        function onKeyDown(e)
+        { uiSystem.keyInputObject?.onKeyDown(e); }
+        document.addEventListener('keydown', onKeyDown);
 
         // set object position in parent space
         function updateTransforms(o)
@@ -9372,9 +9455,18 @@ class UISystemPlugin
             // reset hover object at start of update
             uiSystem.lastHoverObject = uiSystem.hoverObject;
             uiSystem.hoverObject = undefined;
-
+            
             if (mouseWasPressed(0))
             {
+                // exit navigation mode on mouse press
+                uiSystem.navigationMode = false;
+                uiSystem.navigationObject = undefined;
+            }
+            if (uiSystem.keyInputObject)
+            {
+                // handle text input
+                uiSystem.activeObject = uiSystem.keyInputObject;
+                uiSystem.hoverObject = uiSystem.keyInputObject;
                 uiSystem.navigationMode = false;
                 uiSystem.navigationObject = undefined;
             }
@@ -9383,7 +9475,7 @@ class UISystemPlugin
             const navigableObjects = uiSystem.getNavigableObjects();
             if (!navigableObjects.length)
                 uiSystem.navigationObject = undefined;
-            else
+            else if (!uiSystem.keyInputObject)
             {
                 // unselect object if it is no longer navigable
                 if (!navigableObjects.includes(uiSystem.navigationObject))
@@ -9696,6 +9788,7 @@ class UISystemPlugin
         this.activeObject = undefined;
         this.hoverObject = undefined;
         this.lastHoverObject = undefined;
+        this.keyInputObject = undefined;
     }
 
     /** Get all navigable UI objects sorted by navigationIndex
@@ -9976,7 +10069,7 @@ class UIObject
         }
     }
 
-    /** Check if the mouse is overlapping a box in screen space
+    /** Check if the mouse is overlapping this ui object
      *  @return {boolean} - True if overlapping */
     isMouseOverlapping()
     {
@@ -9995,8 +10088,16 @@ class UIObject
         this.onUpdate();
 
         // unset active if disabled
-        if (this.disabled && this === uiSystem.activeObject)
-            uiSystem.activeObject = undefined;
+        if (this.disabled)
+        {
+            if (this === uiSystem.activeObject)
+                uiSystem.activeObject = undefined;
+            if (this === uiSystem.keyInputObject)
+                uiSystem.keyInputObject = undefined;
+        }
+
+        if (uiSystem.keyInputObject)
+            return;
 
         const wasHover = uiSystem.lastHoverObject === this;
         const isActive = this.isActiveObject();
@@ -10023,19 +10124,12 @@ class UIObject
                         uiSystem.activeObject = this;
 
                         if (uiSystem.activateOnPress)
-                        {
-                            this.onClick();
-                            if (!this.soundPress && this.soundClick)
-                                this.soundClick.play();
-                        }
+                            this.click(!this.soundPress);
                     }
                 }
                 if (!uiSystem.activateOnPress)
                 if (!mouseDown && this.isActiveObject() && this.interactive)
-                {
-                    this.onClick();
-                    this.soundClick && this.soundClick.play();
-                }
+                    this.click();
             }
 
             // clear mouse was pressed state even when disabled
@@ -10087,11 +10181,7 @@ class UIObject
     }
 
     /** Called when the navigation button is pressed on this object */
-    navigatePressed()
-    {
-        this.onClick();
-        this.soundClick && this.soundClick.play();
-    }
+    navigatePressed() { this.click(); }
 
     /** @return {boolean} - Is the mouse hovering over this element */
     isHoverObject() { return uiSystem.hoverObject === this; }
@@ -10101,6 +10191,9 @@ class UIObject
 
     /** @return {boolean} - Is the gamepad or keyboard navigation object */
     isNavigationObject() { return uiSystem.navigationObject === this; }
+
+    /** @return {boolean} - Is this object in keyboard input mode */
+    isKeyInputObject() { return uiSystem.keyInputObject === this; }
 
     /** @return {boolean} - Can it be interacted with */
     isInteractive() { return this.interactive && this.visible && !this.disabled;}
@@ -10136,6 +10229,15 @@ class UIObject
             this.disabled ? PURPLE :
             this.interactive ? RED : BLUE;
         uiSystem.drawRect(this.pos, this.size, CLEAR_BLACK, 4, color);
+    }
+
+    /** Internal function called when object is clicked
+     *  @param {boolean} [playSound] */
+    click(playSound)
+    {
+        this.onClick(); 
+        if (playSound && this.soundClick)
+            this.soundClick.play();
     }
 
     /** Called each frame before object updates */
@@ -10210,6 +10312,102 @@ class UIText extends UIObject
         // render the text
         const textSize = this.getTextSize();
         uiSystem.drawText(this.text, this.pos, textSize, this.textColor, this.textLineWidth, this.textLineColor, this.align, this.font, this.fontStyle, true, this.textShadow, this.shadowColor, this.shadowBlur, this.shadowOffset);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/** 
+ * UITextInput - An editable text input field
+ * - A simple text entry field that supports basic editing
+ * - Suitable for short text input like names or numbers
+ * @extends UIObject
+ * @memberof UISystem
+ */
+class UITextInput extends UIObject
+{
+    /** Create a UITextInput object
+     *  @param {Vector2} [pos]
+     *  @param {Vector2} [size]
+     *  @param {string}  [text]
+     */
+    constructor(pos, size, text='')
+    {
+        super(pos, size);
+
+        ASSERT(isString(text), 'ui text must be a string');
+
+        /** @property {number} - Max length of input (0 = no limit) */
+        this.maxLength = 0;
+
+        // set properties
+        this.text = text;
+        this.interactive = true;
+        this.canBeHover = true;
+    }
+
+    click()
+    {
+        // start editing the text
+        uiSystem.keyInputObject = this;
+        this.onClick();
+    }
+
+    /** Stop editing the text edited */
+    stopEditing()
+    {
+        if (!this.isKeyInputObject())
+            return;
+
+        if (this.soundRelease)
+            this.soundRelease.play();
+        uiSystem.activeObject = undefined;
+        uiSystem.keyInputObject = undefined;
+        this.onChange();
+    }
+
+    /** Key down event handler if this object is being edited
+     *  @param {KeyboardEvent} [e] */
+    onKeyDown(e)
+    {
+        const code = e.code, key = e.key
+        if (code === 'Backspace')
+            this.text = this.text.slice(0, -1);
+        else if (code === 'Enter' || code === 'Escape')
+            this.stopEditing();
+        else if (key.length === 1) // printable characters
+        {
+            if (!this.maxLength || this.text.length < this.maxLength)
+                this.text += key;
+        }
+    }
+
+    update()
+    {
+        super.update();
+
+        if (!this.isKeyInputObject())
+            return;
+
+        // click off object to stop editing
+        if (mouseWasPressed(0) && !this.isMouseOverlapping() ||
+            gamepadWasPressed(0, gamepadPrimary))
+        {
+            this.stopEditing();
+            inputClearKey(0,0);
+        }
+    }
+
+    render()
+    {
+        super.render();
+
+        // draw the text scaled to fit
+        const textSize = this.getTextSize();
+        let text = this.text;
+        if (this.isKeyInputObject()) // add a cursor to end of text
+            text += timeReal%1 < .5 ?  '█' : '░';
+        uiSystem.drawText(text, this.pos, textSize, 
+            this.textColor, this.textLineWidth, this.textLineColor, this.align, this.font, this.fontStyle, true, this.textShadow);
     }
 }
 
@@ -10324,9 +10522,10 @@ class UICheckbox extends UIObject
         this.color = color.copy();
         this.interactive = true;
     }
-    onClick()
+    click()
     {
         this.checked = !this.checked;
+        this.onClick();
         this.onChange();
     }
     render()

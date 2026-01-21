@@ -35,7 +35,7 @@ const engineName = 'LittleJS';
  *  @type {string}
  *  @default
  *  @memberof Engine */
-const engineVersion = '1.17.13';
+const engineVersion = '1.17.15';
 
 /** Frames per second to update
  *  @type {number}
@@ -609,7 +609,7 @@ function drawEngineLogo(t)
     const color = (c,l)=> l?`hsl(${[.95,.56,.13][c%3]*360} 99%${[0,50,75][l]}%`:'#000';
 
     // center and fit tos screen
-    const alpha = wave(1,1,t);
+    const alpha = oscillate(1,1,t);
     const p = percent(alpha, .1, .5);
     const size = min(6, min(w,h)/99);
     x.translate(w/2,h/2);
@@ -961,8 +961,6 @@ function debugUpdate()
         debugOverlay = !debugOverlay;
     if (debugOverlay)
     {
-        if (keyWasPressed('Digit0'))
-            debugWatermark = !debugWatermark;
         if (keyWasPressed('Digit1'))
             debugPhysics = !debugPhysics, debugParticles = false;
         if (keyWasPressed('Digit2'))
@@ -1250,7 +1248,7 @@ function debugRenderPost()
         return;
     }
 
-    if (!debugWatermark) return;
+    if (!debugWatermark && !debugOverlay) return;
     
     // update fps display
     mainContext.textAlign = 'right';
@@ -1668,10 +1666,24 @@ function isIntersecting(start, end, pos, size)
  *  @param {number} [amplitude] - Amplitude (max height) of the wave
  *  @param {number} [t=time]    - Value to use for time of the wave
  *  @param {number} [offset]    - Value to use for time offset of the wave
+ *  @param {number} [type]      - Wave type: 0=sine, 1=triangle, 2=square, 3=sawtooth
  *  @return {number}            - Value waving between 0 and amplitude
  *  @memberof Math */
-function wave(frequency=1, amplitude=1, t=time, offset=0)
-{ return amplitude/2 * (1 - cos(offset + t*frequency*2*PI)); }
+function oscillate(frequency=1, amplitude=1, t=time, offset=0, type=0)
+{
+    const phase = (offset + t*frequency) % 1;
+    let value;
+    
+    if (type === 1) // triangle
+        value = 2 * abs(2 * phase - 1) - 1;
+    else if (type === 2) // square
+        value = phase < .5 ? -1 : 1;
+    else if (type === 3) // sawtooth
+        value = 2 * phase - 1;
+    else // sine
+        value = -cos(phase * 2*PI);
+    return amplitude/2 * (value + 1);
+}
 
 /**
  * Check if object is a valid number, not NaN or undefined, but it may be infinite
@@ -1753,15 +1765,17 @@ function lineTest(posStart, posEnd, testFunction, normal)
             // set hit point
             const hitPos = vec2(posStart.x + dirX*t, posStart.y + dirY*t);
 
-            // move inside of tile if on positive edge
+            // ensure result is inside the tile
             const e = 1e-9;
-            if (wasX)
-            {
-                if (stepX < 0)
-                    hitPos.x -= e;
-            }
-            else if (stepY < 0)
-                hitPos.y -= e;
+            const hitPosFloor = hitPos.floor();
+            if (hitPosFloor.x < pos.x)
+                hitPos.x = pos.x;
+            else if (hitPosFloor.x > pos.x)
+                hitPos.x = pos.x + 1 - e;
+            if (hitPosFloor.y < pos.y)
+                hitPos.y = pos.y;
+            else if (hitPosFloor.y > pos.y) 
+                hitPos.y = pos.y + 1 - e;
 
             // set normal
             if (normal)
@@ -3000,6 +3014,12 @@ let touchGamepadSize = 99;
  *  @memberof Settings */
 let touchGamepadAlpha = .3;
 
+/** How long to display the touch gamepad on screen in seconds, set to 0 to always display
+ *  @type {number}
+ *  @default
+ *  @memberof Settings */
+let touchGamepadDisplayTime = 3;
+
 /** Allow vibration hardware if it exists
  *  @type {boolean}
  *  @default
@@ -3273,6 +3293,11 @@ function setTouchGamepadSize(size) { touchGamepadSize = size; }
  *  @param {number} alpha
  *  @memberof Settings */
 function setTouchGamepadAlpha(alpha) { touchGamepadAlpha = alpha; }
+
+/** Set how long to display the touch gamepad on screen in seconds, set to 0 to always display
+ *  @param {number} time
+ *  @memberof Settings */
+function setTouchGamepadDisplayTime(time) { touchGamepadDisplayTime = time; }
 
 /** Set to allow vibration hardware if it exists
  *  @param {boolean} enable
@@ -3976,6 +4001,7 @@ function tile(index=new Vector2, size=tileDefaultSize, texture=0, padding=tileDe
     // create tile info object
     const textureInfo = typeof texture === 'number' ?
         textureInfos[texture] : texture;
+    ASSERT(textureInfo instanceof TextureInfo, 'tile texture is not loaded');
 
     // get the position of the tile
     const sizePaddedX = size.x + padding*2;
@@ -5744,10 +5770,10 @@ function inputRender()
     function touchGamepadRender()
     {
         if (!touchInputEnable || !isTouchDevice || headlessMode) return;
-        if (!touchGamepadEnable || !touchGamepadTimer.isSet()) return;
+        if (!touchGamepadEnable || !touchGamepadTimer.isSet() && touchGamepadDisplayTime) return;
 
         // fade off when not touching or paused
-        const alpha = percent(touchGamepadTimer.get(), 4, 3);
+        const alpha = touchGamepadDisplayTime ? percent(touchGamepadTimer.get(), touchGamepadDisplayTime+1, touchGamepadDisplayTime) : 1;
         if (!alpha || paused) return;
 
         // setup the canvas

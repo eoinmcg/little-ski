@@ -52,15 +52,13 @@ html ,body { background: #333; }
   position: relative;
   inset: 0;
   font-family: monospace;
-  border: 5px solid #2f484e;
   border: 5px solid black;
   margin: auto;
   width: min(90vw, 320px);
   height: fit-content;
-  background: #005784;
-  background: #1b2632;
+  background: center url('public/icy.svg') lightblue;
   padding: 1em;
-  color: white;
+  color: #036;
   z-index: 999999;
   border-radius: 0;
   box-shadow: 10px 10px 0px rgba(0,0,0,.5);
@@ -72,7 +70,7 @@ html ,body { background: #333; }
 #pause-panel {
   font-size: clamp(18px, 2.5vw, 20px);
   min-width: 280px;
-  text-shadow: 1px 1px 2px #000;
+  text-shadow: 1px 1px 2px #fff;
 }
 #pause-panel h1 {
   font-size: 1.6em;
@@ -122,6 +120,7 @@ html ,body { background: #333; }
   background-color: orange;
   color: #fff;
 }
+
 </style>
 </head>
 <body>
@@ -1172,7 +1171,7 @@ addEventListener("DOMContentLoaded", () => {
 </script>
 
 <div id="game-root">
-<div id="loading-overlay" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ff77a8; color: #3f2631; font-family: monospace; font-weight: bold; z-index: 1000; ">
+<div id="loading-overlay" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: lightblue; color: #036; font-family: monospace; font-weight: bold; z-index: 1000; ">
     <div style="font-size: 24px; margin-bottom: 10px;">Loading</div>
     <div id="loading-status">just a sec...</div>
 </div>

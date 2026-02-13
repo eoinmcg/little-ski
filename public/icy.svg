@@ -7,12 +7,12 @@
       <path d="M0,113.14 l113.14,-113.14 M-28.28,28.28 l56.57,-56.57 M84.85,141.42 l56.57,-56.57" 
             stroke="#70d1ff" stroke-width="56.57" />
       
-      <animateTransform 
-        attributeName="patternTransform" 
-        type="translate" 
-        from="0 0" 
-        to="113.14 0" 
-        dur="4s" 
+      <animateTransform
+        attributeName="patternTransform"
+        type="translate"
+        from="0 0"
+        to="113.14 0"
+        dur="7s"
         repeatCount="indefinite" />
     </pattern>
   </defs>

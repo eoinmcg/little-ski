@@ -44,7 +44,7 @@ html ,body { background: #333; }
 #pause-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,.5);
+  background: rgba(0,0,0,.75);
   transition: background 0.3s ease;
 }
 
@@ -52,7 +52,7 @@ html ,body { background: #333; }
   position: relative;
   inset: 0;
   font-family: monospace;
-  border: 5px solid black;
+  border: 5px solid white;
   margin: auto;
   width: min(90vw, 320px);
   height: fit-content;
@@ -61,17 +61,16 @@ html ,body { background: #333; }
   color: #036;
   z-index: 999999;
   border-radius: 0;
-  box-shadow: 10px 10px 0px rgba(0,0,0,.5);
+  box-shadow: 7px 7px 0px rgba(0,0,0,.25);
   top: 40%;
+  border-radius: 3px;
   transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-#pause-ui[hidden] #pause-panel { top: -100%; }
-#pause-panel {
   font-size: clamp(18px, 2.5vw, 20px);
   min-width: 280px;
   text-shadow: 1px 1px 2px #fff;
 }
+
+#pause-ui[hidden] #pause-panel { top: -100%; }
 #pause-panel h1 {
   font-size: 1.6em;
   margin: 0 0 1rem 0;
@@ -523,13 +522,6 @@ function gameUpdate() {
 
   G.patternManager.update();
 
-  // G.nextSpawn += G.speed;
-  // if (G.nextSpawn > 3) {
-  //   G.nextSpawn = 0;
-  //   if (Math.random() > .75) { new Tree(G); }
-  //   if (Math.random() > .95) { new Treat(G); }
-  // }
-
   if (G.score > G.hiScore && !G.newHiscore) {
     G.medals[0].unlock();
     G.newHiscore = true;
@@ -651,8 +643,6 @@ class Player extends EngineObject {
   constructor(game) {
     let size = 1.7;
     frame = Math.random() > .5 ? 70 : 82;
-    // frame = 76; //snowman
-    // frame = 76; // yeti
     super(
       vec2(0, 7),
       vec2(size),

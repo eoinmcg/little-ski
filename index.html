@@ -38,6 +38,16 @@ html ,body { background: #333; }
   z-index: 1000;
 }
 
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 7px solid #fff3;
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 #pause-ui {
   position: fixed;
   inset: 0;
@@ -144,7 +154,7 @@ html ,body { background: #333; }
 </head>
 <body>
 
-<script>
+<script type="module">
 'use strict';
 
 if ('serviceWorker' in navigator) {
@@ -340,21 +350,21 @@ function resetGameObjects() {
 
 function preCacheMusic() {
   console.log('Pre-rendering music tracks...');
-  const tracksToCache = [14, 18, 24, 48, 36]; 
+  const tracksToCache = [14, 18, 24, 48, 36];
 
-  tracksToCache.forEach(tuneId => {
+  for (let i = 0; i < tracksToCache.length; i++) {
+    const tuneId = tracksToCache[i];
     // 1. Trigger the music generation
     const musicInstance = G.tunes.music(tuneId);
-
     // 2. Immediately stop it.
     // This forces the library to parse the pattern and channel data
     // into memory without actually making sound.
     musicInstance.stop();
 
-    // 3. Store the instance if you want to reuse it,
-    // though pico8-music usually expects a fresh call.
     G.audioCache.set(tuneId, true);
-  });
+
+
+  }
   console.log('Music metadata cached.');
 }
 
@@ -1080,7 +1090,7 @@ function funkyText(str, pos=cameraPos, scale = 2, crazy = true, game) {
   });
 }
 
-addEventListener("DOMContentLoaded", () => {
+addEventListener("DOMContentLoaded", async() => {
 
   G.modalBackdrop = document.querySelector('#pause-backdrop');
   G.modalDialog = document.querySelector('#pause-panel');
@@ -1163,14 +1173,13 @@ addEventListener("DOMContentLoaded", () => {
 
   const loader = document.getElementById('loading-overlay');
   const title = document.getElementById('loading-title');
-  const status = document.getElementById('loading-status');
+  const spinner = loader.querySelector('.spinner');
 
   preCacheMusic();
 
-
   title.classList.add('blink')
   title.innerText = 'READY?'
-  status.innerText = ''
+  spinner.style.display = 'none';
 
   const handleClick = () => {
     // Trigger the first frame of the game
@@ -1200,7 +1209,8 @@ addEventListener("DOMContentLoaded", () => {
 <div id="game-root">
 <div id="loading-overlay" style="">
     <div id="loading-title" style="font-size: 24px; margin-bottom: 10px;">Loading</div>
-    <div id="loading-status">just a sec...</div>
+    <div class="spinner"></div>
+
 </div>
   <div id="pause-ui" hidden>
     <div id="pause-backdrop"></div>

@@ -52,52 +52,48 @@ html ,body { background: #333; }
   position: fixed;
   inset: 0;
   z-index: 10001;
-  opacity: 1;
-  transition: opacity 0.3s ease, display 0.3s allow-discrete;
-}
-
-#pause-ui[hidden] {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-@starting-style {
-  #pause-ui { opacity: 0; }
-  #pause-ui #pause-panel { top: -100%; }
+#pause-ui:not([hidden]) {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 #pause-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(255,255,255,.75);
-  transition: background 0.3s ease;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 #pause-panel {
   position: relative;
-  inset: 0;
   font-family: monospace;
   border: 5px solid #036;
-  margin: auto;
   width: min(90vw, 320px);
-  height: fit-content;
   background: center url('public/icy.svg') lightblue;
   padding: 1em;
   color: #036;
-  z-index: 999999;
-  border-radius: 0;
   box-shadow: 7px 7px 0px rgba(0,0,0,.25);
-  top: 40%;
   border-radius: 3px;
-  transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  font-size: clamp(18px, 2.5vw, 20px);
-  min-width: 280px;
-  text-shadow: 1px 1px 2px #fff;
+  transform: translateY(50px) scale(0.95);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 #pause-ui[hidden] #pause-panel { top: -100%; }
+#pause-ui:not([hidden]) #pause-panel {
+  transform: translateY(0) scale(1);
+}
+
 #pause-panel h1 {
   font-size: 1.6em;
   margin: 0 0 1rem 0;
@@ -306,7 +302,7 @@ function gameInit() {
   checkIOSInstall();
   addSnow();
 
-  preWarmPool(G);
+  // preWarmPool(G);
   G.patternManager = new PatternManager(G);
 }
 
@@ -340,11 +336,7 @@ function removeSnow() {
 
 function resetGameObjects() {
   engineObjects.forEach(obj => {
-    if (obj instanceof Tree || obj instanceof Treat) {
-      Pool.recycle(obj);
-    } else {
-      obj.destroy();
-    }
+    obj.destroy();
   });
 }
 
@@ -368,24 +360,6 @@ function preCacheMusic() {
   console.log('Music metadata cached.');
 }
 
-function preWarmPool(game) {
-  const TREE_COUNT = 30;
-  const TREAT_COUNT = 10;
-
-  // Create trees and immediately put them in the pool
-  for (let i = 0; i < TREE_COUNT; i++) {
-    // We spawn them far off-screen so they don't flash for a frame
-    const t = new Tree(game, vec2(-1000, -1000));
-    Pool.recycle(t);
-  }
-
-  // Create treats and immediately put them in the pool
-  for (let i = 0; i < TREAT_COUNT; i++) {
-    const tr = new Treat(game, vec2(-1000, -1000));
-    Pool.recycle(tr);
-  }
-
-}
 
 function startGame() {
   inputClear();
@@ -403,11 +377,6 @@ function startGame() {
   medalsForEach(medal=> medal.unlocked = false);
 
   if (G.plays > 5 && !window.location.search.length) G.mode = ['yeti', 'snowman', 'human'].rnd();
-
-  // Ensure the audio context is active before playing
-  if (G.tunes.context && G.tunes.context.state === 'suspended') {
-    G.tunes.context.resume();
-  }
 
   // background
   let halfH = G.height / 2;
@@ -431,24 +400,18 @@ function startGame() {
 }
 
 function playTune(tune = false, delay = 0) {
-  if (G.mute) { return; }
-  
-  // Stop current audio
-  if (G.audio) { 
-    try { G.audio.stop(); } catch(e) {} 
+  if (G.settings.mute) { return; }
+
+  if (G.audio) {
+    try { G.audio.stop(); } catch(e) {}
   }
 
   const tuneId = tune || [14, 18, 24, 48].rnd();
-  
-  window.setTimeout(() => {
-    // Now that it's pre-warmed, this call will be much faster
+  try {
     G.audio = G.tunes.music(tuneId);
-    
-    // Safety check: if the user muted while the timeout was waiting
-    if (G.mute && G.audio) {
-      G.audio.stop();
-    }
-  }, delay);
+  } catch (e) {
+    console.log('Audio Error: ', e)
+  }
 }
 
 function splashUpdate() {
@@ -605,11 +568,10 @@ function gameRenderPost() {
     } else if (G.mode === 'snowman') {
       funkyText('SNOWMAN', vec2(2.7,10.7), 3, false, G);
     } else {
-      funkyText('LITTLE', vec2(2.7,10.7), 3, false, G);
-      funkyText('SKI', vec2(6,7), 5, false, G);
+      funkyText('LITTLE', vec2(1,10.5), 3, false, G);
     }
-    funkyText('SKI', vec2(6,7), 5, false, G);
-    funkyText('READY?', vec2(4, 0), 2, true, G);
+    funkyText('SKI', vec2(2,7), 5, false, G);
+    funkyText('READY?', vec2(1, 0), 2, true, G, ['snow', 'lightBlue']);
     let y = -11.5;
     let x = (G.width / 2) - .5;
     let size = .8;
@@ -639,9 +601,9 @@ function gameRenderPost() {
     );
   });
 
-  const flash = Math.sin(new Date().getTime() * 0.005);
+  const flash = Math.sin(time * 3);
   if ((G.player && G.player.crashed)) {
-    funkyText('GAME OVER', vec2(0,-3), 2, true, G);
+    funkyText('GAME OVER', vec2(0,-3), 2, true, G, ['red', 'yellow']);
     if (G.newHiscore && flash > 0) {
       drawText('NEW HISCORE!', vec2(0,-12), 1.5, YELLOW, .5, G.cols.medBlue, 'center', 'monospace', 'bold');
     }
@@ -727,11 +689,16 @@ class Player extends EngineObject {
     }
 
     this.trail.push({pos: this.pos.copy(), angle: this.angle});
-    // remove any entries that are now off screen
-    this.trail = this.trail.filter(t => {
+
+    for (let i = 0; i < this.trail.length; i++) {
+        let t = this.trail[i];
         t.pos.y += this.game.speed;
-        return t.pos.y <= this.game.height;
-    });
+
+        if (t.pos.y > this.game.height || this.trail.length > 60) {
+            this.trail.splice(i, 1);
+            i--; // Decrement index to account for the shift
+        }
+    }
   }
 
   render() {
@@ -805,8 +772,7 @@ class Tree extends EngineObject {
 
     // remove object when past top of screen
     if (this.pos.y > this.game.height / 2) {
-      // super.destroy();
-      Pool.recycle(this);
+      super.destroy();
     }
   }
 
@@ -839,13 +805,12 @@ class Treat extends EngineObject {
 
   update() {
     if (this.dead) return;
-    this.wave = Math.abs(Math.sin(new Date().getTime() * 0.0005));
+    this.wave = Math.abs(Math.sin(time * 2));
     this.updateGlimmer();
     super.update();
     this.pos.y += this.game.speed;
     if (this.pos.y > this.game.height / 2) {
-      // this.destroy();
-      Pool.recycle(this);
+      this.destroy();
     }
   }
 
@@ -965,37 +930,6 @@ const particlesCollect = (pos, game) => {
   );
 }
 
-const Pool = {
-  trees: [],
-  treats: [],
-
-  // Get an object from the pool or create a new one if empty
-  obtain(type, game, pos) {
-    let obj;
-    if (type === 'Tree') {
-      obj = this.trees.pop() || new Tree(game, pos);
-    } else {
-      obj = this.treats.pop() || new Treat(game, pos);
-    }
-
-    // Reset properties for the "new" life
-    obj.pos = pos.copy();
-    obj.dead = false;
-    obj.setCollision(true, false);
-    return obj;
-  },
-
-  // Put an object back into the pool instead of destroying it
-  recycle(obj) {
-    obj.dead = true;
-    obj.pos = vec2(-100, -100); // Move off-screen
-    obj.setCollision(false, false);
-    
-    if (obj instanceof Tree) this.trees.push(obj);
-    else if (obj instanceof Treat) this.treats.push(obj);
-  }
-};
-
 class PatternManager {
 constructor(game) {
     this.game = game;
@@ -1035,9 +969,8 @@ constructor(game) {
     pattern.objects.forEach(obj => {
       const spawnPos = vec2(obj.pos.x, -this.game.height / 2 + obj.pos.y - 5);
       this.spawnQueue.push(() => {
-        Pool.obtain(obj.type, this.game, spawnPos);
-        // if (obj.type === 'Tree') new Tree(this.game, spawnPos);
-        // else if (obj.type === 'Treat') new Treat(this.game, spawnPos);
+        if (obj.type === 'Tree') new Tree(this.game, spawnPos);
+        else if (obj.type === 'Treat') new Treat(this.game, spawnPos);
       });
     });
   }
@@ -1054,42 +987,47 @@ constructor(game) {
  *  @param {String}  text
  *  @param {Vector2} [pos=camerPos]
  *  @param {Number}  [scale=2]
- *  @param {Boolean}   [crazy=true]
  *  @param {Object}   [game]
+ *  @param {Boolean}   [crazy=false]
+ *  @param {Object}   [game]
+ *  @param {Array}   [cols]
  *  */
-function funkyText(str, pos=cameraPos, scale = 2, crazy = true, game) {
-  let wave = crazy ? Math.sin(new Date().getTime() * 0.005) : 0;
-  let startX = str.length * .5;
-  let cols = game.splash
-    ? [game.cols.white, game.cols.white]
-    : [game.cols.red, game.cols.yellow];
-  let offset = 108 - 65; // 108 is A on the tileset - 65 is charCode for A
-  str.toUpperCase().split('').forEach((letter, i) => {
-    let l = letter.charCodeAt(0) + offset;
-    let col = wave > 0 ? cols[0] : cols[1];
-    if (crazy && wave > 0) {
-      if (i % 2) {
-        if (col === cols[0]) col = cols[1];
-      } else {
-        if (col === cols[1]) col = cols[0];
-      }
-    } else if (crazy && wave < 0) {
-      if (i % 2) {
-        if (col === cols[1]) col = cols[0];
-      } else {
-        if (col === cols[0]) col = cols[1];
-      }
+function funkyText(str, pos = cameraPos, scale = 2, crazy = false, game, cols = ['red', 'yellow']) {
+  const letters = str.toUpperCase().split('');
+  const charWidth = scale * 0.7;
+  const totalWidth = letters.length * charWidth;
+  const offset = 108 - 65; 
+
+  letters.forEach((letter, i) => {
+    if (letter === ' ') return;
+
+    // Individual Letter Wave
+    // Using (time * speed + i * phase) makes letters follow each other in a snake motion
+    const speed = 5;
+    const phaseShift = i * 0.5;
+    const individualWave = crazy ? Math.sin(time * speed + phaseShift) : 0;
+    
+    // Calculate Position
+    const x = (i * charWidth) - (totalWidth / 2);
+    const y = individualWave * 0.5; // Up and down bounce
+    const angle = crazy ? individualWave * 0.1 : 0; // Slight tilt
+    const charPos = pos.add(vec2(x, y));
+
+    let col = game.cols.white;
+    if (crazy) {
+        // Cycle colors based on time + index
+        const colorIndex = Math.floor(time * 10 + i) % 2;
+        col = colorIndex === 0 ? game.cols[cols[0]] : game.cols[cols[1]];
     }
-    if (letter !== ' ') {
-      let a = (crazy) ? wave / 20 : 0, // letter angle
-      x = startX + (i * scale * .7) - (game.width / 2),
-      y = a * (i + 1) * 2;
-      y = (Math.sin(x) / 5) + wave / 10;
-      drawTile(pos.add(vec2(x, y)), vec2(scale), tile(l, 16), col, a);
-    }
+
+    // Draw the same letter slightly offset in a dark color first
+    const shadowOffset = vec2(0.1, -0.1);
+    drawTile(charPos.add(shadowOffset), vec2(scale), tile(letter.charCodeAt(0) + offset, 16), new Color(0,0,0,0.5), angle);
+
+    // 5. DRAW MAIN CHARACTER
+    drawTile(charPos, vec2(scale), tile(letter.charCodeAt(0) + offset, 16), col, angle);
   });
 }
-
 addEventListener("DOMContentLoaded", async() => {
 
   G.modalBackdrop = document.querySelector('#pause-backdrop');
@@ -1178,7 +1116,8 @@ addEventListener("DOMContentLoaded", async() => {
   preCacheMusic();
 
   title.classList.add('blink')
-  title.innerText = 'READY?'
+  title.innerText = ('ontouchstart' in window)
+    ? 'TAP ME' : 'CLICK ME';
   spinner.style.display = 'none';
 
   const handleClick = () => {
@@ -1233,7 +1172,7 @@ addEventListener("DOMContentLoaded", async() => {
               Install App
           </button>
       </div>
-    <div id="ios-install-message" style="display: none; background: #222; border: 1px solid #444; padding: 10px; margin-top: 10px; border-radius: 8px; font-size: 14px; text-align: left;">
+    <div id="ios-install-message" style="display: none; background: #036; border: 1px solid #444; padding: 10px; margin-top: 10px; text-shadow: none; font-size: 14px; text-align: left;">
         <p style="margin: 0 0 8px 0; color: #fff;"><b>Play Offline on iPhone:</b></p>
         <ol style="margin: 0; padding-left: 20px; color: #ccc;">
             <li>Tap the <b>Share</b> button </li>

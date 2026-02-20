@@ -120,6 +120,9 @@ html ,body { background: #333; }
   color: #fff;
 }
 
+.blink { animation: blinker 1s linear infinite;}
+@keyframes blinker { 50% { opacity: 0; } }
+
 </style>
 </head>
 <body>
@@ -259,6 +262,8 @@ if (window.location.hostname !== 'localhost') {
   setDebugWatermark(false);
 
 G.tunes = new P8(Tunes.i, Tunes.m);
+setCanvasPixelated(true);
+setTileDefaultBleed(.5);
 
 function gameInit() {
   const gameSize = vec2(G.width * G.tileSize, G.height * G.tileSize);
@@ -267,34 +272,10 @@ function gameInit() {
   // Set camera scale so the full design height fits the screen
   cameraScale = G.tileSize; // pixels per world unit
 
-  setCanvasPixelated(true);
-  setTileDefaultBleed(.5);
-
-  setTimeout(() => {
-      const status = document.getElementById('loading-status');
-      
-      // 3. Heavy Task: Pre-warm objects
-      if (status) status.innerText = "Sharpening skis...";
-      preWarmPool(G);
-
-      // 4. Heavy Task: Pre-cache music
-      if (status) status.innerText = "Tuning the radio...";
-      preCacheMusic();
-
-      // 5. Done! Hide the loader and show the splash
-      const loader = document.getElementById('loading-overlay');
-      if (loader) loader.style.display = 'none';
-      
-      // Trigger the first frame of the game
-      G.initialized = true; 
-    }, 100); // 100ms is enough for the browser to paint the UI
-
   checkIOSInstall();
   addSnow();
 
   preWarmPool(G);
-  preCacheMusic();
-
   G.patternManager = new PatternManager(G);
 
 }
@@ -1145,16 +1126,34 @@ addEventListener("DOMContentLoaded", () => {
     console.log('PWA installed');
   });
 
-  engineInit(
-    gameInit,
-    gameUpdate, gameUpdatePost,
-    gameRender, gameRenderPost,
-    G.tiles,
-    document.querySelector('#game-root'),
-  );
-  console.log('🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔')
-  console.log('🏂 Wanna see how this game was made? Check out the tutorial:')
-  console.log('https://eoinmcgrath.com/little-ski/tutorial.html')
+
+  const loader = document.getElementById('loading-overlay');
+  const title = document.getElementById('loading-title');
+  const status = document.getElementById('loading-status');
+
+  preCacheMusic();
+
+
+  title.classList.add('blink')
+  title.innerText = 'READY?'
+  status.innerText = ''
+
+  const handleClick = () => {
+    // Trigger the first frame of the game
+    loader.style.display = 'none';
+    engineInit(
+      gameInit,
+      gameUpdate, gameUpdatePost,
+      gameRender, gameRenderPost,
+      G.tiles,
+      document.querySelector('#game-root'),
+    );
+    console.log('🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔🏔')
+    console.log('🏂 Wanna see how this game was made? Check out the tutorial:')
+    console.log('https://eoinmcgrath.com/little-ski/tutorial.html')
+    window.removeEventListener('click', handleClick); 
+  }
+  window.addEventListener('click', handleClick);
 });
 
 
@@ -1162,7 +1161,7 @@ addEventListener("DOMContentLoaded", () => {
 
 <div id="game-root">
 <div id="loading-overlay" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: lightblue; color: #036; font-family: monospace; font-weight: bold; z-index: 1000; ">
-    <div style="font-size: 24px; margin-bottom: 10px;">Loading</div>
+    <div id="loading-title" style="font-size: 24px; margin-bottom: 10px;">Loading</div>
     <div id="loading-status">just a sec...</div>
 </div>
   <div id="pause-ui" hidden>

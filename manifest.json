@@ -1,6 +1,6 @@
 {
   "name": "LittleJS Ski",
-  "version": "1.0.2",
+  "version": "1.6.0",
   "manifest_version": 3,
   "short_name": "LittleSki",
   "start_url": ".",

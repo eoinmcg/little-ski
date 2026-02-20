@@ -23,6 +23,21 @@
 
 <style>
 html ,body { background: #333; }
+
+#loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: lightblue;
+  color: #036;
+  font-family: monospace;
+  font-weight: bold;
+  z-index: 1000;
+}
+
 #pause-ui {
   position: fixed;
   inset: 0;
@@ -44,15 +59,17 @@ html ,body { background: #333; }
 #pause-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,.75);
+  background: rgba(255,255,255,.75);
   transition: background 0.3s ease;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 #pause-panel {
   position: relative;
   inset: 0;
   font-family: monospace;
-  border: 5px solid white;
+  border: 5px solid #036;
   margin: auto;
   width: min(90vw, 320px);
   height: fit-content;
@@ -250,6 +267,10 @@ const G = {
 }
 
 G.audioCache = new Map();
+G.mode = 'human';
+
+if (window.location.search.includes('yeti')) G.mode = 'yeti';
+if (window.location.search.includes('snowman')) G.mode = 'snowman';
 
 G.medals = [
   new Medal(0, 'NEW HISCORE', 'Totally gnarly, dude!', '🥇')
@@ -277,7 +298,6 @@ function gameInit() {
 
   preWarmPool(G);
   G.patternManager = new PatternManager(G);
-
 }
 
 function checkIOSInstall() {
@@ -372,6 +392,8 @@ function startGame() {
   medalsInit('little-ski');
   medalsForEach(medal=> medal.unlocked = false);
 
+  if (G.plays > 5 && !window.location.search.length) G.mode = ['yeti', 'snowman', 'human'].rnd();
+
   // Ensure the audio context is active before playing
   if (G.tunes.context && G.tunes.context.state === 'suspended') {
     G.tunes.context.resume();
@@ -420,7 +442,7 @@ function playTune(tune = false, delay = 0) {
 }
 
 function splashUpdate() {
-  if (mouseWasReleased(0) || keyWasReleased('Space')) {
+  if (time > .5 && (mouseWasReleased(0) || keyWasReleased('Space'))) {
       if (window.navigator.standalone === true) {
       const root = document.querySelector('#game-root');
         root.requestFullscreen();
@@ -568,17 +590,24 @@ function gameRender() {
 
 function gameRenderPost() {
   if (G.splash) {
-    funkyText('LITTLE', vec2(2.7,10.7), 3, false, G);
+    if (G.mode === 'yeti') {
+      funkyText('YETI', vec2(2.7,10.7), 3, false, G);
+    } else if (G.mode === 'snowman') {
+      funkyText('SNOWMAN', vec2(2.7,10.7), 3, false, G);
+    } else {
+      funkyText('LITTLE', vec2(2.7,10.7), 3, false, G);
+      funkyText('SKI', vec2(6,7), 5, false, G);
+    }
     funkyText('SKI', vec2(6,7), 5, false, G);
     funkyText('READY?', vec2(4, 0), 2, true, G);
-    let y = -12.5;
+    let y = -11.5;
     let x = (G.width / 2) - .5;
     let size = .8;
     let col = G.cols.medBlue;
     drawText(`code: eoinmcg`, cameraPos.add(vec2(x, y)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
     drawText(`gfx: kenney.nl`, cameraPos.add(vec2(x, y-1)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
     drawText(`music: @gruber_music`, cameraPos.add(vec2(x, y-2)), size, col, 0, WHITE, 'right', 'monospace', 'bold');
-    drawText(`v.1.5`, cameraPos.add(vec2(-9.5, y-2)), size, new Color(1,1,1,0.5), 0, WHITE, 'left', 'monospace', 'bold');
+    drawText(`v.1.6`, cameraPos.add(vec2(-9.5, y-2)), size, new Color(1,1,1,0.5), 0, WHITE, 'left', 'monospace', 'bold');
     return;
   }
 
@@ -622,8 +651,12 @@ function renderHiScore() {
 
 class Player extends EngineObject {
   constructor(game) {
-    let size = 1.7;
-    frame = Math.random() > .5 ? 70 : 82;
+    let size = 1.7,
+        frame = Math.random() > .5 ? 70 : 82;
+
+    if (G.mode === 'yeti') frame = 78;
+    if (G.mode === 'snowman') frame = 76;
+
     super(
       vec2(0, 7),
       vec2(size),
@@ -776,8 +809,9 @@ class Tree extends EngineObject {
 
 class Treat extends EngineObject {
   constructor(game, pos = null) {
-    let t = 92; // 90: beer, 91: pizza, 92: donut, 93: ice-cream
-    let frame = [t].rnd();
+    let frame = 92; // 90: beer, 91: pizza, 92: donut, 93: ice-cream
+    if (G.mode === 'yeti') frame = 90;
+    if (G.mode === 'snowman') frame = 93;
     let x = game.width / 2;
     let y = game.height / 2;
 
@@ -1152,15 +1186,19 @@ addEventListener("DOMContentLoaded", () => {
     console.log('🏂 Wanna see how this game was made? Check out the tutorial:')
     console.log('https://eoinmcgrath.com/little-ski/tutorial.html')
     window.removeEventListener('click', handleClick); 
+    window.removeEventListener('keypress', handleClick);
   }
+
   window.addEventListener('click', handleClick);
+  window.addEventListener('keypress', handleClick);
+
 });
 
 
 </script>
 
 <div id="game-root">
-<div id="loading-overlay" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: lightblue; color: #036; font-family: monospace; font-weight: bold; z-index: 1000; ">
+<div id="loading-overlay" style="">
     <div id="loading-title" style="font-size: 24px; margin-bottom: 10px;">Loading</div>
     <div id="loading-status">just a sec...</div>
 </div>

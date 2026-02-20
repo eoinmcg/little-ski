@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
   <defs>
     <pattern id="icyPattern" x="0" y="0" width="113.14" height="113.14" patternUnits="userSpaceOnUse">
-      <rect width="113.14" height="113.14" fill="#4dbfff" />
+      <rect width="113.14" height="113.14" fill="#add8e6" />
       
       <path d="M0,113.14 l113.14,-113.14 M-28.28,28.28 l56.57,-56.57 M84.85,141.42 l56.57,-56.57" 
             stroke="#70d1ff" stroke-width="56.57" />

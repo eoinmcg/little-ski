@@ -19,7 +19,6 @@
 <script src="public/js/tunes.js"></script>
 
 <script defer src="https://cloud.umami.is/script.js" data-website-id="6a7a59ee-cea7-4517-8aac-1aa3347fb5da"></script>
-<script src="sw.js"></script>
 
 <style>
 html ,body { background: #333; }
@@ -299,10 +298,16 @@ function gameInit() {
   // Set camera scale so the full design height fits the screen
   cameraScale = G.tileSize; // pixels per world unit
 
+  // iOS Audio Unlock
+  if (G.tunes && G.tunes.ctx && G.tunes.ctx.state === 'suspended') {
+    G.tunes.ctx.resume();
+  }
+
+  preCacheMusic();
+
   checkIOSInstall();
   addSnow();
 
-  // preWarmPool(G);
   G.patternManager = new PatternManager(G);
 }
 
@@ -342,21 +347,27 @@ function resetGameObjects() {
 
 function preCacheMusic() {
   console.log('Pre-rendering music tracks...');
-  const tracksToCache = [14, 18, 24, 48, 36];
-
-  for (let i = 0; i < tracksToCache.length; i++) {
-    const tuneId = tracksToCache[i];
-    // 1. Trigger the music generation
-    const musicInstance = G.tunes.music(tuneId);
-    // 2. Immediately stop it.
-    // This forces the library to parse the pattern and channel data
-    // into memory without actually making sound.
-    musicInstance.stop();
-
-    G.audioCache.set(tuneId, true);
-
-
-  }
+  // const tracksToCache = [14, 18, 24, 48, 36];
+  //
+  // for (let i = 0; i < tracksToCache.length; i++) {
+  //   const tuneId = tracksToCache[i];
+  //   // 1. Trigger the music generation
+  //   const musicInstance = G.tunes.music(tuneId);
+  //   // 2. Immediately stop it.
+  //   // This forces the library to parse the pattern and channel data
+  //   // into memory without actually making sound.
+  //   musicInstance.stop();
+  //
+  //   G.audioCache.set(tuneId, true);
+  //
+  //
+  // }
+[14, 18, 24, 48, 36].forEach(id => {
+    try {
+      const m = G.tunes.music(id);
+      m.stop();
+    } catch(e) { console.warn("Audio warm-up failed for track", id); }
+  });
   console.log('Music metadata cached.');
 }
 
@@ -416,11 +427,7 @@ function playTune(tune = false, delay = 0) {
 
 function splashUpdate() {
   if (time > .5 && (mouseWasReleased(0) || keyWasReleased('Space'))) {
-      if (window.navigator.standalone === true) {
-      const root = document.querySelector('#game-root');
-        root.requestFullscreen();
-      }
-      startGame();
+    startGame();
   }
 }
 
